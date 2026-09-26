@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
-import { Azeret_Mono, Spectral } from "next/font/google";
+import { Azeret_Mono, Geist, Geist_Mono, Spectral } from "next/font/google";
 import "./globals.css";
+// Interface layer over the base rules; must load after globals.css.
+import "./interface.css";
 
 const spectral = Spectral({
   variable: "--font-serif",
@@ -17,8 +19,21 @@ const azeret = Azeret_Mono({
   display: "swap",
 });
 
+// One family for title, interface and data
+const geist = Geist({
+  variable: "--font-geist",
+  subsets: ["latin"],
+  display: "swap",
+});
+
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+  display: "swap",
+});
+
 export const metadata: Metadata = {
-  title: "Reef Sentinel",
+  title: "Reef Atlas",
   description:
     "Step inside a reef's history. Heat stress, fishing activity, lionfish and hurricanes on Florida's Coral Reef, 2016–2024.",
 };
@@ -30,7 +45,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${spectral.variable} ${azeret.variable}`}>
+    <html lang="en" className={`${spectral.variable} ${azeret.variable} ${geist.variable} ${geistMono.variable}`}>
       <body>{children}</body>
     </html>
   );

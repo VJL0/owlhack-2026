@@ -1,4 +1,4 @@
-# Reef Sentinel — web
+# Reef Atlas — web
 
 A cinematic 3D journey into Florida's Coral Reef, 2016–2024: from the night side of the Earth, down the reef tract, into the water, and into the pressures acting on one reef.
 
@@ -23,7 +23,7 @@ Deep link straight underwater: `/#reef=looe-key` (any site id from `src/data/sit
 | Pressure Constellation (`P`) | Heat, fishing, lionfish and hurricanes around the reef: size = magnitude, pulse = model importance, outer arcs = model interactions | R3F, DOM label layer |
 | Timeline | Real DHW heat ribbon, hurricane passes, lionfish records; scrub, play (space), arrow keys | SVG |
 
-Controls: `Space` play/pause time · `←/→` a week (`Shift` a month, `PgUp/PgDn` a year) · `P` pressures · `Esc` close / return to surface. "Reduce motion" (top right) follows the OS setting and can be switched for demos.
+Controls: `Space` play/pause time · `←/→` a week (`Shift` a month, `PgUp/PgDn` a year) · `P` pressures · `Esc` close / return to surface. Motion follows the OS "reduce motion" setting.
 
 ## Data and honesty
 
