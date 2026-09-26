@@ -3,6 +3,7 @@
 import { create } from "zustand";
 import { T_DEFAULT, T_MAX, T_MIN, clamp } from "./time";
 import type { Pair, Pressure } from "./model";
+import type { Lang } from "./voiceActions";
 
 export type Phase =
   | "boot" // loading the globe
@@ -30,6 +31,10 @@ interface State {
   /** The reef scene has compiled and drawn its first frames. */
   reefReady: boolean;
   layers: { sst: boolean; storms: boolean; lionfish: boolean; ais: boolean };
+  /** Spoken guide: narrates each scene on arrival. Off unless the viewer turns it on. */
+  guide: boolean;
+  /** Language for the guide and voice answers. */
+  lang: Lang;
 
   setPhase: (p: Phase) => void;
   setSite: (id: string) => void;
@@ -44,6 +49,8 @@ interface State {
   setCrossing: (c: State["crossing"]) => void;
   setReefReady: (v: boolean) => void;
   toggleLayer: (k: keyof State["layers"]) => void;
+  setGuide: (v: boolean) => void;
+  setLang: (l: Lang) => void;
 }
 
 export const useStore = create<State>((set) => ({
@@ -59,6 +66,8 @@ export const useStore = create<State>((set) => ({
   crossing: "none",
   reefReady: false,
   layers: { sst: true, storms: true, lionfish: true, ais: false },
+  guide: false,
+  lang: "en",
 
   setPhase: (phase) => set({ phase }),
   setSite: (siteId) => set({ siteId }),
@@ -73,4 +82,6 @@ export const useStore = create<State>((set) => ({
   setCrossing: (crossing) => set({ crossing }),
   setReefReady: (reefReady) => set({ reefReady }),
   toggleLayer: (k) => set((s) => ({ layers: { ...s.layers, [k]: !s.layers[k] } })),
+  setGuide: (guide) => set({ guide }),
+  setLang: (lang) => set({ lang }),
 }));

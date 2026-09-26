@@ -6,6 +6,7 @@ import { BAA_LABELS, META, lionfishNear, siteById, simulatedAt, snapshot, stormE
 import { predict, type Pressure } from "@/lib/model";
 import { PAIR_DEFS, PRESSURE_DEFS, pairReading } from "@/lib/pressures";
 import { useStore } from "@/lib/store";
+import { SPRING } from "@/lib/ui";
 import { formatDate, formatMonth } from "@/lib/time";
 import ProvenanceGlyph from "./ProvenanceGlyph";
 
@@ -158,9 +159,9 @@ export default function EvidenceSlate() {
       key={selection.kind + selection.id}
       className="slate"
       aria-label={`Evidence for ${site.name}`}
-      initial={{ opacity: 0, x: 24 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+      initial={{ opacity: 0, transform: "translateX(12px) scale(0.98)" }}
+      animate={{ opacity: 1, transform: "translateX(0px) scale(1)" }}
+      transition={SPRING}
     >
       <button className="slate-close" onClick={() => select(null)} aria-label="Close evidence">
         ×

@@ -2,27 +2,20 @@
 
 import dynamic from "next/dynamic";
 import { useEffect } from "react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, MotionConfig, motion } from "motion/react";
 import { useStore } from "@/lib/store";
+import { SPRING } from "@/lib/ui";
 import { SITES } from "@/lib/data";
 import Hero from "@/features/intro/Hero";
 import RegionHud from "@/features/hud/RegionHud";
 import Caption from "@/features/hud/Caption";
 import Timeline from "@/features/timeline/Timeline";
 import Starfield from "@/features/globe/Starfield";
-import MotionToggle, { readMotionChoice } from "@/features/hud/MotionToggle";
 import ReefHud from "@/features/hud/ReefHud";
 import DiveOverlay from "@/features/dive/DiveOverlay";
-
-/** Leave the reef: cover with water, hand back to the globe, reveal. */
-function ascend() {
-  const s = useStore.getState();
-  if (s.phase !== "reef" || s.crossing !== "none") return;
-  s.setPlaying(false);
-  s.setPressuresOpen(false);
-  s.setCrossing("plunge");
-  window.setTimeout(() => useStore.getState().setPhase("ascending"), s.reducedMotion ? 50 : 750);
-}
+import VoiceAgent from "@/features/voice/VoiceAgent";
+import Narrator from "@/features/voice/Narrator";
+import { ascend } from "@/lib/navigation";
 
 const GlobeView = dynamic(() => import("@/features/globe/GlobeView"), { ssr: false });
 const ReefView = dynamic(() => import("@/features/reef/ReefView"), { ssr: false });
@@ -34,14 +27,11 @@ export default function Experience() {
   const setReducedMotion = useStore((s) => s.setReducedMotion);
   const reducedMotion = useStore((s) => s.reducedMotion);
 
-  // Reduced motion follows the OS unless the viewer chose otherwise here.
+  // Reduced motion follows the OS setting.
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const saved = readMotionChoice();
-    setReducedMotion(saved ?? mq.matches);
-    const on = (e: MediaQueryListEvent) => {
-      if (readMotionChoice() === null) setReducedMotion(e.matches);
-    };
+    setReducedMotion(mq.matches);
+    const on = (e: MediaQueryListEvent) => setReducedMotion(e.matches);
     mq.addEventListener("change", on);
     return () => mq.removeEventListener("change", on);
   }, [setReducedMotion]);
@@ -90,7 +80,13 @@ export default function Experience() {
   const showTimeline = phase === "region" || phase === "reef";
 
   return (
-    <main className="stage" data-motion={reducedMotion ? "reduced" : "full"} style={{ ["--timeline-h" as string]: showTimeline ? "150px" : "0px" }}>
+    // Reduced motion keeps opacity fades and drops movement
+    <MotionConfig reducedMotion={reducedMotion ? "always" : "never"}>
+    <main
+      className="stage"
+      data-motion={reducedMotion ? "reduced" : "full"}
+      style={{ ["--timeline-h" as string]: showTimeline ? "166px" : "0px" }}
+    >
       <Starfield />
       <GlobeView />
       {phase !== "reef" && <div className="globe-vignette" aria-hidden="true" />}
@@ -104,15 +100,19 @@ export default function Experience() {
 
       <AnimatePresence>
         {phase === "intro" && (
-          <motion.div key="hero" exit={{ opacity: 0, filter: "blur(8px)" }} transition={{ duration: 0.9 }}>
+          <motion.div
+            key="hero"
+            exit={{ opacity: 0, filter: "blur(6px)" }}
+            transition={{ duration: 0.35, ease: [0.23, 1, 0.32, 1] }}
+          >
             <Hero />
           </motion.div>
         )}
       </AnimatePresence>
 
       {phase !== "boot" && phase !== "intro" && (
-        <button className="wordmark" onClick={() => window.location.reload()} aria-label="Reef Sentinel, restart">
-          REEF SENTINEL
+        <button className="wordmark" onClick={() => window.location.reload()} aria-label="Reef Atlas, restart">
+          REEF ATLAS
         </button>
       )}
 
@@ -120,7 +120,14 @@ export default function Experience() {
 
       <AnimatePresence>
         {phase === "region" && (
-          <motion.div key="region" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.8 }}>
+          <motion.div
+            key="region"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            // Panels slide in from their own edge in CSS. No filter here: it would break their backdrop blur.
+            transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
+          >
             <RegionHud />
           </motion.div>
         )}
@@ -132,11 +139,12 @@ export default function Experience() {
         </div>
       )}
 
-      {phase !== "boot" && (
+      {phase !== "boot" && phase !== "intro" && (
         <div className="hud" style={{ pointerEvents: "none" }}>
-          <MotionToggle />
+          <VoiceAgent />
         </div>
       )}
+      <Narrator />
 
       <AnimatePresence>
         {showTimeline && (
@@ -144,10 +152,11 @@ export default function Experience() {
             key="timeline"
             className="hud"
             style={{ pointerEvents: "none" }}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-            transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+            // Full transform strings stay on the compositor while the reef scene loads
+            initial={{ opacity: 0, transform: "translateY(20px)" }}
+            animate={{ opacity: 1, transform: "translateY(0px)" }}
+            exit={{ opacity: 0, transform: "translateY(20px)" }}
+            transition={SPRING}
           >
             <div style={{ pointerEvents: "auto" }}>
               <Timeline mode={phase === "reef" ? "reef" : "region"} />
@@ -157,5 +166,6 @@ export default function Experience() {
       </AnimatePresence>
       <DiveOverlay />
     </main>
+    </MotionConfig>
   );
 }
