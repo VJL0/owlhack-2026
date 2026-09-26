@@ -10,6 +10,9 @@ services:
     restart: unless-stopped
     expose:
       - "3000"
+    env_file:
+      - path: ${TIGER_ENV_FILE:-/opt/reefatlas/secrets/tiger.env}
+        required: false
     environment:
       NODE_ENV: production
     healthcheck:

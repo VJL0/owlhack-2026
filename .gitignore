@@ -7,3 +7,6 @@ infra/.env
 !.env.example
 *.pem
 *.key
+
+# Downloaded Tiger Cloud credentials (never commit)
+tiger-cloud-*-credentials.*
