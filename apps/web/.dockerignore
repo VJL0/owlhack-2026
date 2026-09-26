@@ -1,0 +1,19 @@
+# Build context for apps/web. Keep it small and free of secrets.
+node_modules
+.next
+out
+build
+coverage
+public/cesium
+.env*
+!.env.example
+*.log
+.DS_Store
+.git
+.vscode
+.idea
+Dockerfile
+.dockerignore
+README.md
+AGENTS.md
+CLAUDE.md

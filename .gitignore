@@ -1,0 +1,9 @@
+# local-only secrets and OS files
+infra/.env
+.DS_Store
+
+.env
+.env.*
+!.env.example
+*.pem
+*.key

@@ -1,0 +1,37 @@
+# Reef Sentinel edge. Caddy obtains and renews Let's Encrypt certificates
+# automatically for {$DOMAIN} and www.{$DOMAIN} (ports 80 and 443 must be open).
+
+{$SITE_ADDRESS} {
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), geolocation=(), payment=(), usb=()"
+		Cross-Origin-Opener-Policy "same-origin"
+		# Next.js inlines hydration scripts; Cesium runs web workers; map tiles come from Esri and NASA GIBS.
+		Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://gibs.earthdata.nasa.gov; connect-src 'self' https://server.arcgisonline.com https://gibs.earthdata.nasa.gov; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'"
+		-Server
+	}
+
+	# Cesium runtime files are not content-hashed: cache for a week, then revalidate.
+	# (/_next/static is already served immutable by Next.js.)
+	@cesium path /cesium/*
+	header @cesium >Cache-Control "public, max-age=604800, stale-while-revalidate=86400"
+
+	reverse_proxy web:3000 {
+		health_uri /api/health
+		health_interval 15s
+		health_timeout 3s
+	}
+
+	log {
+		output stdout
+		format json
+	}
+}
+
+www.{$DOMAIN} {
+	redir https://{$DOMAIN}{uri} permanent
+}

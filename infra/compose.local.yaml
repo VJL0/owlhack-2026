@@ -1,0 +1,10 @@
+# Local smoke test of the production stack, plain HTTP, no certificates:
+#   docker compose -f compose.yaml -f compose.local.yaml up --build
+#   open http://localhost:8080
+services:
+  caddy:
+    ports: !override
+      - "8080:8080"
+    environment:
+      DOMAIN: localhost
+      SITE_ADDRESS: http://localhost:8080

@@ -66,3 +66,7 @@ src/
   data/                generated JSON (committed; app runs offline except map tiles)
 scripts/               copy-cesium.mjs, build-data.mjs
 ```
+
+## Deployment
+
+Production runs on Vultr behind Caddy at https://reefatlas.us. See [`infra/README.md`](../../infra/README.md). Smoke-test the production stack locally with `docker compose -f infra/compose.yaml -f infra/compose.local.yaml up --build`.

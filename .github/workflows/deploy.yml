@@ -1,0 +1,133 @@
+name: Deploy production
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Finish a deployment before starting another; never cancel an in-flight release.
+concurrency:
+  group: reefatlas-production
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image: ${{ steps.image.outputs.name }}@${{ steps.build.outputs.digest }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Test release recovery
+        run: python3 infra/tests/test_release.py
+      - name: Image name
+        id: image
+        run: echo "name=ghcr.io/${GITHUB_REPOSITORY,,}/web" >> "$GITHUB_OUTPUT"
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and publish
+        id: build
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: apps/web
+          platforms: linux/amd64
+          push: true
+          tags: ${{ steps.image.outputs.name }}:${{ github.sha }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+          cache-from: type=gha,scope=reefatlas-web
+          cache-to: type=gha,scope=reefatlas-web,mode=max
+          provenance: mode=max
+          sbom: true
+      - name: Smoke test the exact published image
+        env:
+          IMAGE: ${{ steps.image.outputs.name }}@${{ steps.build.outputs.digest }}
+        run: |
+          docker run -d --name smoke --read-only --cap-drop ALL \
+            --security-opt no-new-privileges --tmpfs /tmp \
+            --tmpfs /app/.next/cache:uid=1000,gid=1000 \
+            -p 127.0.0.1:3000:3000 "$IMAGE"
+          trap 'docker logs smoke; docker rm -f smoke' EXIT
+          curl --fail --retry 20 --retry-all-errors --retry-delay 2 --max-time 5 http://127.0.0.1:3000/api/health
+          curl --fail --silent --output /dev/null http://127.0.0.1:3000/
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment:
+      name: production
+      url: https://reefatlas.us
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Configure SSH
+        env:
+          DEPLOY_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ vars.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          umask 077
+          mkdir -p ~/.ssh
+          printf '%s\n' "$DEPLOY_KEY" > ~/.ssh/reefatlas_ci
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+          cat > ~/.ssh/config <<'SSH'
+          Host reefatlas-production
+            HostName 66.135.11.15
+            User deploy
+            IdentityFile ~/.ssh/reefatlas_ci
+            IdentitiesOnly yes
+            BatchMode yes
+            StrictHostKeyChecking yes
+            ServerAliveInterval 15
+            ServerAliveCountMax 4
+          SSH
+      - name: Transfer release configuration
+        run: |
+          release="/opt/reefatlas/releases/${GITHUB_SHA}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          # GitHub-generated release path must expand on the runner.
+          # shellcheck disable=SC2029
+          ssh reefatlas-production "mkdir -p '$release/caddy'"
+          scp infra/compose.yaml infra/scripts/release.sh infra/scripts/pull-image.sh "reefatlas-production:$release/"
+          scp infra/caddy/Caddyfile "reefatlas-production:$release/caddy/"
+      - name: Pull image with a temporary registry credential
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_USER: ${{ github.actor }}
+          IMAGE: ${{ needs.build.outputs.image }}
+        run: |
+          release="/opt/reefatlas/releases/${GITHUB_SHA}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          # Runner values are trusted GitHub metadata and the validated image digest.
+          # shellcheck disable=SC2029
+          printf '%s' "$GH_TOKEN" | ssh reefatlas-production "bash '$release/pull-image.sh' '$GH_USER' '$IMAGE'"
+      - name: Deploy and verify HTTPS
+        env:
+          IMAGE: ${{ needs.build.outputs.image }}
+        run: |
+          release="/opt/reefatlas/releases/${GITHUB_SHA}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          # shellcheck disable=SC2029
+          ssh reefatlas-production "bash '$release/release.sh' '$release' '$IMAGE'"
+          curl --fail --retry 10 --retry-all-errors --retry-delay 3 --max-time 10 https://reefatlas.us/api/health
+          # Markdown backticks are literal.
+          # shellcheck disable=SC2016
+          printf 'Deployed `%s` to https://reefatlas.us\n' "$IMAGE" >> "$GITHUB_STEP_SUMMARY"
+      - name: Remove SSH credential
+        if: always()
+        run: rm -f ~/.ssh/reefatlas_ci
