@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useStore } from "@/lib/store";
 
 const TITLE = "REEF SENTINEL";
@@ -32,6 +33,7 @@ export default function Hero() {
           <button className="btn-quiet" onClick={() => setPhase("region")}>
             Skip the flight
           </button>
+          <Link className="btn-quiet" href="/data">Explore reef datasets</Link>
         </div>
       </div>
       <p className="hero-credit" style={{ animationDelay: `${base + 3.6}s` }}>

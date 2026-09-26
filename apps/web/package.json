@@ -10,7 +10,12 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "data": "node scripts/build-data.mjs"
+    "data": "node scripts/build-data.mjs",
+    "db:validate": "node scripts/import-tiger.mjs --validate-only",
+    "db:import": "node --env-file=.env.tiger-admin scripts/import-tiger.mjs",
+    "db:verify": "node --env-file=.env.tiger-admin scripts/import-tiger.mjs --verify-only",
+    "test:db": "node --test database/*.test.mjs",
+    "db:reader": "node --env-file=.env.tiger-admin scripts/provision-tiger-reader.mjs"
   },
   "dependencies": {
     "@react-three/drei": "10.7.9",
@@ -19,21 +24,25 @@
     "cesium": "1.145.0",
     "motion": "13.4.4",
     "next": "16.3.6",
+    "pg": "^8.23.0",
     "postprocessing": "6.39.5",
     "react": "19.2.8",
     "react-dom": "19.2.8",
+    "server-only": "^0.0.1",
     "three": "0.186.1",
     "zustand": "5.0.15"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
+    "@types/pg": "^8.23.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/three": "0.186.0",
     "babel-plugin-react-compiler": "1.0.0",
     "eslint": "^9",
     "eslint-config-next": "16.3.6",
+    "pg-copy-streams": "^7.0.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   },

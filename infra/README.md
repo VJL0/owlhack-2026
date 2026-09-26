@@ -81,7 +81,7 @@ replaced. It does not claim zero downtime or resilience to loss of the server.
 - Local container test: from `infra`, run
   `docker compose -f compose.yaml -f compose.local.yaml up --build`.
 - The CSP includes inline/eval allowances required by the current app; it is not
-  a nonce-based strict CSP. No application runtime secrets are currently required.
+  a nonce-based strict CSP. TigerData runtime secrets are read from `/opt/reefatlas/secrets/tiger.env`; see [TigerData setup](../apps/web/database/README.md).
 
 ## Official documentation researched September 26, 2026
 
