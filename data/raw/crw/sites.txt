@@ -1,0 +1,9 @@
+fowey-rocks 25.5906 -80.0967
+carysfort-reef 25.2217 -80.2117
+molasses-reef 25.0119 -80.3765
+alligator-reef 24.8517 -80.6183
+tennessee-reef 24.7461 -80.7824
+sombrero-key 24.6279 -81.1116
+looe-key 24.5486 -81.4058
+sand-key 24.4539 -81.8775
+pulaski-shoal 24.6933 -82.7730
