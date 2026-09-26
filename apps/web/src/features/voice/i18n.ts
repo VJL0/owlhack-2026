@@ -1,0 +1,78 @@
+import type { Lang } from "@/lib/voiceActions";
+
+/** Spanish when the browser prefers it, else English. */
+export function browserLang(): Lang {
+  if (typeof navigator === "undefined") return "en";
+  return navigator.languages?.some((l) => l.toLowerCase().startsWith("es")) || navigator.language?.toLowerCase().startsWith("es")
+    ? "es"
+    : "en";
+}
+
+export function monthYear(date: Date, lang: Lang) {
+  return new Intl.DateTimeFormat(lang, { month: "long", year: "numeric", timeZone: "UTC" }).format(date);
+}
+
+export const STRINGS = {
+  en: {
+    pill: "Ask the reef",
+    status: {
+      idle: "Tap the mic or press V to talk",
+      listening: "Listening… tap the mic or press V to send",
+      transcribing: "Hearing you…",
+      thinking: "Checking the data…",
+      speaking: "Speaking… tap the mic or press V to stop",
+    },
+    placeholder: "Or type a question and press Enter",
+    close: "Close (Esc)",
+    replay: "Replay",
+    clear: "Clear",
+    checked: "Checked",
+    guide: "Spoken guide",
+    talk: "Talk",
+    send: "Send",
+    stop: "Stop speaking",
+    notHeard: "I didn't catch that. Try again.",
+    suggestions: {
+      reef: ["Where am I?", "Why is this reef stressed?", "Take me back up"],
+      region: ["Take me to Looe Key", "Which reef was hottest in 2023?", "What can I say?"],
+    },
+    enterGuide: "Enter with spoken guide",
+    enterGuideHint: "Narrates each scene. Press V anytime to talk.",
+    welcome: "Welcome to Reef Atlas. Flying to Florida's Coral Reef.",
+    region: (month: string) =>
+      `You're above Florida's Coral Reef: nine reefs from Biscayne to the Dry Tortugas, shown in ${month}. Press V and say a reef name to dive in, or ask a question. Say "what can I say" for help.`,
+    reefArrive: (name: string, region: string) => `${name}, ${region}.`,
+    reefHint: `Press V to ask about this reef, or say "take me back up".`,
+  },
+  es: {
+    pill: "Pregunta al arrecife",
+    status: {
+      idle: "Toca el micrófono o pulsa V para hablar",
+      listening: "Escuchando… toca el micrófono o pulsa V para enviar",
+      transcribing: "Te escucho…",
+      thinking: "Consultando los datos…",
+      speaking: "Hablando… toca el micrófono o pulsa V para parar",
+    },
+    placeholder: "O escribe una pregunta y pulsa Enter",
+    close: "Cerrar (Esc)",
+    replay: "Repetir",
+    clear: "Borrar",
+    checked: "Consultado",
+    guide: "Guía hablada",
+    talk: "Hablar",
+    send: "Enviar",
+    stop: "Dejar de hablar",
+    notHeard: "No te he entendido. Inténtalo de nuevo.",
+    suggestions: {
+      reef: ["¿Dónde estoy?", "¿Por qué sufre este arrecife?", "Llévame arriba"],
+      region: ["Llévame a Looe Key", "¿Qué arrecife tuvo más calor en 2023?", "¿Qué puedo decir?"],
+    },
+    enterGuide: "Entrar con guía hablada",
+    enterGuideHint: "Narra cada escena. Pulsa V para hablar.",
+    welcome: "Bienvenido a Reef Atlas. Volando al arrecife de coral de Florida.",
+    region: (month: string) =>
+      `Estás sobre el arrecife de coral de Florida: nueve arrecifes desde Biscayne hasta Dry Tortugas, en ${month}. Pulsa V y di el nombre de un arrecife para sumergirte, o haz una pregunta. Di "qué puedo decir" para obtener ayuda.`,
+    reefArrive: (name: string, region: string) => `${name}, ${region}.`,
+    reefHint: `Pulsa V para preguntar sobre este arrecife, o di "llévame arriba".`,
+  },
+} satisfies Record<Lang, unknown>;
