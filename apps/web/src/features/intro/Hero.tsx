@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useSyncExternalStore } from "react";
 import { useStore } from "@/lib/store";
 import type { Lang } from "@/lib/voiceActions";
@@ -42,10 +41,6 @@ export default function Hero() {
               setPhase("world");
             }}
           />
-          <button className="btn-quiet" onClick={() => setPhase("flying")}>
-            Fly to Florida
-          </button>
-          <Link className="btn-quiet" href="/data">Explore reef datasets</Link>
         </div>
       </div>
       <p className="hero-credit" style={{ animationDelay: `${base + 3.6}s` }}>
