@@ -9,8 +9,6 @@ const MUR_ANOMALY_RANGES: [string, string][] = [
   ["2024-07-03", "2025-08-15"],
 ];
 
-export const MUR_ANOMALY_START = MUR_ANOMALY_RANGES[0][0];
-
 const DAY = 86_400_000;
 const ms = (d: string) => Date.parse(`${d}T00:00:00Z`);
 const iso = (t: number) => new Date(t).toISOString().slice(0, 10);

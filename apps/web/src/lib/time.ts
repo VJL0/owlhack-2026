@@ -44,7 +44,6 @@ export function monthIndex(t: number) {
 }
 
 export const clamp = (v: number, a = 0, b = 1) => Math.min(b, Math.max(a, v));
-export const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 export const smoothstep = (a: number, b: number, v: number) => {
   const x = clamp((v - a) / (b - a));
   return x * x * (3 - 2 * x);

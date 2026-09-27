@@ -72,5 +72,3 @@ export function floorHeight(x: number, z: number) {
   const rough = (fbm2(nx * 0.55, nz * 0.55) - 0.5) * 0.55 * spur + (noise2(nx * 2.3, nz * 2.3) - 0.5) * 0.07;
   return base + spurH + rough;
 }
-
-export const REEF_CENTER: [number, number, number] = [0, -7.2, -3];

@@ -25,8 +25,6 @@ export const U = {
 /** Latest data-driven target, refreshed when the site or date changes. */
 export const envNow: { target: EnvTarget | null } = { target: null };
 
-export type SharedUniforms = typeof U;
-
 // After the 2023 heatwave, 98–100% of elkhorn and staghorn colonies around the
 // Keys and Dry Tortugas died (Frontiers in Marine Science, 2024).
 const ACROPORA_LOSS_START = ymdToDay(2023, 9, 5);

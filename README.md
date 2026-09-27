@@ -1,36 +1,150 @@
 # Reef Atlas
 
-Reefs change between the few times anyone surveys them, while heat, starfish,
-storms and fishing overlap in between. Reef Atlas reconstructs what happened
-between surveys at four places with long public records: Moorea (French
-Polynesia), Lizard Island (Great Barrier Reef), Soneva Fushi (Maldives, real 3D
-photogrammetry) and Florida's Coral Reef. It has a voice guide you can talk to,
-and a public archive of global reef heat and bleaching data. Every dataset the
-app shows lives in PostgreSQL on Tiger Cloud (TigerData); the repository holds no
-JSON or CSV copies. Built for OwlHacks 2026.
+Coral reefs change between the few times anyone surveys them. Reef Atlas shows
+what happened in between (heat, storms, starfish, fishing) at reefs with long
+public records, and marks every stretch nobody observed. Built for OwlHacks 2026.
 
-- Live experience: <https://reefatlas.us>
-- Reef data explorer: <https://reefatlas.us/data>
-- Data API: <https://reefatlas.us/api/reef-data?dataset=risk&year=2023>
+**Live:** [reefatlas.us](https://reefatlas.us) ·
+**Data explorer:** [reefatlas.us/data](https://reefatlas.us/data) ·
+**API:** [`/api/reef-data`](https://reefatlas.us/api/reef-data?dataset=risk&year=2023)
 
-The viewer starts on the night side of the Earth and pulls back to the whole
-globe, where 2,720 reefs are coloured by their peak heat stress for any year
-from 1985 to 2025, or by a model forecast for 2027–2031, and four flagship
-reefs are marked. Each flagship opens an evidence dossier: an evidence timeline
-of field surveys, reef sensors, satellite heat stress, cyclone tracks and the
-monitoring program's own attributions, with every stretch nobody observed shown
-as such; the declines measured between consecutive surveys, each with what else
-was present in that interval (never a claimed cause); what is missing; and why
-the reef needs another look. At Soneva Fushi you can enter the real 3D surveys
-of a reef plot and switch between dates. Florida keeps its cinematic flight down
-the reef tract and a dive beneath one of nine reef sites, where heat stress,
-fishing activity, invasive lionfish and hurricanes drive the underwater scene. Press `V` to ask the reef a question by voice or text,
-in English or Spanish. A Gemini agent answers only from the reef data, and can
-move the page ("take me to Moorea", "take me to Looe Key", "go to August 2023"). ElevenLabs speaks
-the answer. A separate server-rendered explorer pages through 137,764 records for
-2,720 reefs worldwide.
+## What you can do
 
-## Contents
+- **Explore the globe.** 2,720 reefs coloured by peak heat stress for any year
+  from 1985 to 2025, or by a forecast for 2027–2031.
+- **Open a flagship reef.** Moorea (French Polynesia), Lizard Island (Great
+  Barrier Reef) and Soneva Fushi (Maldives) each open an evidence timeline of
+  field surveys, reef sensors, satellite heat stress and cyclone tracks. Each
+  decline between surveys is listed with what else was happening at the time,
+  never a claimed cause.
+- **Walk a reef in 3D.** At Soneva Fushi, step into real 3D scans of a reef plot
+  and switch between survey dates.
+- **Dive in Florida.** Fly down the reef tract and dive at one of nine sites,
+  where heat, storms, lionfish and fishing shape the underwater scene.
+- **Ask the reef.** Press `V` and ask by voice or text, in English or Spanish.
+  The agent answers only from the reef data and can move the page ("take me to
+  Moorea", "go to August 2023").
+- **Browse the data.** Page through 137,764 records at `/data` or query them
+  through the API.
+
+## Real, modelled or simulated
+
+Every number on screen is labelled ● observed, ◌ model output or ⊘ simulated.
+
+| Label | Data |
+| --- | --- |
+| ● Observed | Field surveys (Moorea LTER, AIMS), reef temperature sensors, NOAA satellite heat stress, cyclone and hurricane tracks, lionfish records, Soneva 3D scans, global heat history 1985–2025 (years that are estimated are marked as such) |
+| ◌ Model | Heat forecast 2027–2031, bleaching risk 2021–2025, and the demo bleaching model in the Florida reef scene |
+| ⊘ Simulated | Fishing and vessel activity at the Florida sites (seeded, shaped by real seasons) |
+
+Sources, licences and limits: [flagship data inventory](docs/data-inventory.md)
+and the [full data table](#1-what-is-real-and-what-is-simulated).
+
+## How it works
+
+```mermaid
+flowchart LR
+    User(["Browser<br/>globe, 3D reef, voice panel"])
+
+    subgraph VM["Vultr VM, Docker Compose"]
+        Caddy["Caddy<br/>HTTPS"]
+        Web["Next.js 16<br/>pages and data API"]
+        Speech["Voice agent<br/>Gemini with data tools"]
+    end
+
+    DB[("Tiger Cloud<br/>PostgreSQL + TimescaleDB<br/>every dataset")]
+    Gemini["Google Gemini"]
+    Eleven["ElevenLabs<br/>speech in and out"]
+    Maps["Esri and NASA<br/>map imagery"]
+
+    User --> Caddy
+    Caddy --> Web
+    Caddy --> Speech
+    Web -->|read-only| DB
+    Speech -->|read-only| DB
+    Web --> Gemini
+    Speech --> Gemini
+    User <-->|live audio| Eleven
+    Eleven <-->|text| Speech
+    User --> Maps
+```
+
+- **One database.** Every dataset lives in Tiger Cloud (schema `reef_data`).
+  The server reads it with a read-only role and the browser gets it through
+  small JSON routes. The app ships no data files.
+- **Voice.** ElevenLabs handles listening, turn-taking and speaking. Our voice
+  service runs the Gemini agent, whose tools query Tiger and move the page. API
+  keys never reach the browser.
+- **Deploys.** Every push to `main` builds a Docker image in GitHub Actions and
+  releases it to the VM, rolling back automatically if the health check fails.
+
+## The experience
+
+```mermaid
+stateDiagram-v2
+    direction LR
+    state "Intro" as Intro
+    state "Globe" as World
+    state "Flagship dossier" as Flagship
+    state "Soneva 3D scan" as Splat
+    state "Florida reef tract" as Florida
+    state "Underwater reef" as Reef
+
+    [*] --> Intro
+    Intro --> World: Enter the Ocean
+    World --> Flagship: pick a flagship
+    Flagship --> World: Esc
+    Flagship --> Splat: enter a plot
+    Splat --> Flagship: Esc
+    World --> Florida: fly to Florida
+    Florida --> World: Esc
+    Florida --> Reef: dive to a site
+    Reef --> Florida: surface
+```
+
+The voice agent makes the same moves as a click. Deep links jump straight in:
+`#flagship=moorea`, `#splat=ootsl1`, `#reef=looe-key`.
+
+## Data pipeline
+
+```mermaid
+flowchart LR
+    Sources["Public sources<br/>NOAA, AIMS, Moorea LTER,<br/>USGS, bleaching surveys,<br/>Soneva 3D scans"]
+    Py["Functions/ (Python)<br/>heat history, forecast,<br/>bleaching risk"]
+    Build["apps/web/scripts<br/>Florida and flagship data"]
+    DB[("Tiger Cloud<br/>reef_data")]
+    App["Globe, dossiers,<br/>/data, voice agent"]
+
+    Sources --> Py
+    Sources --> Build
+    Py -->|"supplied CSVs<br/>pnpm db:import"| DB
+    Build -->|"pnpm db:atlas"| DB
+    DB --> App
+```
+
+Each import runs in one transaction and commits only if Tiger reads back exactly
+what went in (same SHA-256). `pnpm db:verify` repeats the check at any time.
+
+## Quick start
+
+Needs Node 24 and pnpm 11.
+
+```bash
+cd apps/web
+pnpm install --frozen-lockfile
+pnpm dev    # http://localhost:3000
+```
+
+Put `TIGER_DATABASE_URL` (the read-only role) in `apps/web/.env.local`. Without
+it the page loads but shows "Reef data is temporarily unavailable". Every
+variable and script is in [section 8](#8-local-development).
+
+## Technical reference
+
+Everything below is the full detail: every data source, the frontend, the voice
+agent, the Tiger Cloud schema and import, the API, and deployment.
+
+### Contents
 
 1. [What is real and what is simulated](#1-what-is-real-and-what-is-simulated)
 2. [System architecture](#2-system-architecture)
@@ -41,53 +155,26 @@ the answer. A separate server-rendered explorer pages through 137,764 records fo
 7. [Deployment](#7-deployment)
 8. [Local development](#8-local-development)
 9. [Testing and verification](#9-testing-and-verification)
-10. [Official documentation](#10-official-documentation)
 
-Deeper references: [`apps/web/README.md`](apps/web/README.md) (the experience),
-[`apps/web/database/README.md`](apps/web/database/README.md) (TigerData),
-[`infra/README.md`](infra/README.md) (operations).
+Deeper references: [`apps/web/database/README.md`](apps/web/database/README.md) (TigerData),
+[`infra/README.md`](infra/README.md) (operations),
+[`Functions/README.md`](Functions/README.md) (Python models).
 
-## 1. What is real and what is simulated
+### 1. What is real and what is simulated
 
-Every number on screen carries a provenance glyph: ● observed, ◌ model output,
-⊘ simulated.
+| Data | Source | Kind |
+| --- | --- | --- |
+| Moorea and Lizard Island reef surveys | Moorea Coral Reef LTER, AIMS | observed |
+| Soneva Fushi 3D scans | wildflow/soneva-corals | observed |
+| Heat stress, storms, sea temperature, lionfish | NOAA, NASA, USGS | observed |
+| Global heat history 1985–2025 | Python models in `Functions/` | observed / estimated |
+| Heat forecast and bleaching risk | Python models in `Functions/` | model |
+| Bleaching probability in the 3D reef | demo model | model |
+| Florida fishing and vessel activity | seeded simulation | **simulated** |
 
-Flagship reefs use a finer set of evidence labels: field survey, reef sensor,
-satellite, storm track, reported cause, derived. The full verified inventory
-(URLs, variables, dates, resolution, licences, limitations, and what could not be
-accessed) is in [`docs/data-inventory.md`](docs/data-inventory.md).
+Flagship source details: [`docs/data-inventory.md`](docs/data-inventory.md).
 
-| Layer | Source | Kind | Where it lives |
-| --- | --- | --- | --- |
-| Moorea coral, macroalgae, fish, crown-of-thorns starfish (2005–2025), reef thermistors (2005–2024), 49-sensor lagoon network (2021–2025), 2019 bleaching colony segmentation | Moorea Coral Reef LTER data packages on EDI (knb-lter-mcr.4, .6, .1039, .1035, .1045, .5050) | field / sensor | raw: `data/raw/mcr`; app: Tiger `atlas_documents` (`flagship/moorea`, `moorea/lagoon`, `moorea/bleaching2019`) |
-| Lizard Island coral cover, starfish, juvenile corals (1985–2026) and disturbance attributions | AIMS Long-Term Monitoring Program (doi:10.25845/5c09bc4ff315c) | field / reported | raw: `data/raw/aims`; app: Tiger `atlas_documents` (`flagship/lizard-island`) |
-| Soneva Fushi 3D surveys: 23 surveys, 6 plots, Gaussian splats | wildflow/soneva-corals (Hugging Face, CC BY 4.0), 2 plots converted to SPZ | field (3D) | `public/splats/soneva`; manifest in Tiger `atlas_documents` (`soneva/splats`) |
-| Heat stress at the flagships (weekly, 2002–2026) | NOAA Coral Reef Watch 5 km v3.1 via NOAA CoastWatch ERDDAP | satellite | raw: `data/raw/crw/weekly-*.csv`; app: inside the flagship dossiers |
-| On-reef heat stress at Moorea | NOAA's DHW method applied to the 10 m thermistor | derived | Tiger `atlas_documents` (`flagship/moorea`) |
-| Cyclones near the flagships (1985–2026) | NOAA NCEI IBTrACS v04r01 | track | raw: `data/raw/ibtracs`; app: inside the flagship dossiers |
-| Surface change vs. noise floor, Soneva plots | height comparison of co-registered splats | derived | Tiger `atlas_documents` (`soneva/change`) |
-| Degree Heating Weeks, SST, SST anomaly, alert level (9 sites, weekly, 2016–2024) | NOAA Coral Reef Watch 5 km v3.1 via PacIOOS ERDDAP | observed | Tiger `florida_thermal` |
-| Hurricane tracks and closest approach per site | NOAA NHC HURDAT2 (2025 release) | observed / derived | Tiger `storms`, `storm_fixes`, `storm_site_passes` |
-| Lionfish records and distance to each site | USGS Nonindigenous Aquatic Species | observed / derived | Tiger `lionfish_records`, `lionfish_site_distances` |
-| Sea-temperature anomaly map (from 2019-07-23) | NASA JPL MUR via NASA GIBS | observed | fetched live as map tiles |
-| Peak heat stress per reef and year, 1985–2025 (no 2003 rows), 2,649 reefs | `heat_history_1985_2025.csv` (supplied; each value labelled observed or estimated) | observed / estimated, as supplied | Tiger `heat_history` |
-| Peak heat stress forecast 2027–2031 with 10th–90th percentiles and P(DHW ≥ 4, ≥ 8) | `heat_forecast_2027_2031.csv` (supplied ridge-model output) | model | Tiger `heat_forecast` |
-| Back-tested forecast skill by horizon (ridge, XGBoost, two baselines) | `heat_forecast_validation.csv` (supplied) | model evaluation | Tiger `heat_forecast_validation` |
-| Bleaching risk 2021–2025, 2,720 reefs | `bleaching_risk_2021_2025.csv` (supplied model output) | model | Tiger `bleaching_risk` |
-| Reef surveys with 365-day heat-stress windows, 2013–2020 | `reef_stress_analysis.csv` (supplied) | observed / derived, as supplied | Tiger `reef_stress` |
-| AIS fishing, vessel presence, SAR detections | Seeded simulation shaped by real seasons | simulated | Tiger `florida_simulated_activity` |
-| Bleaching probability and its explanation in the 3D scene | Demo logistic model with hand-set weights and exact Shapley values | model (demo) | `src/lib/model.ts` |
-| Voice agent answers | Gemini, restricted to tool results; the tools run SQL on Tiger | same as the data it cites | `src/server/agent`, `src/server/reef/tigerReefData.ts` |
-
-All Tiger tables are in schema `reef_data`. The supplied CSVs and the former
-`src/data/*.json` files were deleted from the repository only after Tiger was shown
-to rebuild each of them byte for byte (section 6). The raw upstream downloads in
-`data/raw` stay in Git as the pipeline's inputs.
-
-The heat and bleaching datasets include 740 reefs in the Florida Keys, but they use
-their own reef IDs and are **not** joined to the nine demonstration sites.
-
-## 2. System architecture
+### 2. System architecture
 
 ```mermaid
 flowchart LR
@@ -168,7 +255,7 @@ API keys stay on the server. The browser receives a temporary conversation token
 and a per-session capability for page context and actions. CSP permits the
 ElevenLabs API and WebRTC hosts.
 
-## 3. Repository layout
+### 3. Repository layout
 
 ```text
 apps/web/                      Next.js 16 app (the only deployable)
@@ -202,13 +289,15 @@ data/raw/                      raw NOAA CRW CSVs, HURDAT2, USGS lionfish JSON; f
                                (mcr, aims, soneva, ibtracs, crw weekly) with SHA-256 in sources.json
 data/build/atlas/              pipeline output loaded into Tiger by `pnpm db:atlas` (ignored by Git)
 docs/data-inventory.md         verified inventory of every flagship data source
+Functions/                     Python models: heat history, heat forecast, bleaching risk
+processed/                     model outputs (CSV); charts/ holds the model charts
 infra/                         compose.yaml, Caddyfile, release scripts, tests
 .github/workflows/deploy.yml   build, smoke test and deploy on push to main
 ```
 
-## 4. Frontend
+### 4. Frontend
 
-### 4.1 Experience state machine
+#### 4.1 Experience state machine
 
 The whole experience is one zustand store (`src/lib/store.ts`). A `phase` field
 drives which scene is mounted and what the camera does. A second field,
@@ -272,7 +361,7 @@ and finishes after the phase has changed. What each transition does in the code:
   `motion` library gets `MotionConfig reducedMotion="always"`, so interface
   transitions keep their opacity fades but drop movement.
 
-### 4.2 Rendering stack
+#### 4.2 Rendering stack
 
 | Concern | Implementation |
 | --- | --- |
@@ -284,7 +373,7 @@ and finishes after the phase has changed. What each transition does in the code:
 | Time | A float of days since 2016-01-01 UTC (`src/lib/time.ts`), clamped to 2016-01-01 … 2024-12-31. The default is 2023-08-20, the peak of the 2023 Florida marine heatwave. |
 | Interface | Geist and Geist Mono (`next/font`). Frosted-glass panels live in `interface.css`, which is loaded after `globals.css`. Panel motion uses one critically damped spring (`src/lib/ui.ts`) and full `transform` strings, so animations stay on the compositor while the reef scene loads. |
 
-### 4.3 Client domain model
+#### 4.3 Client domain model
 
 ```mermaid
 classDiagram
@@ -372,7 +461,7 @@ loading at the same time), then `setFloridaData` fills the module's live exports
 If Tiger cannot be reached the page shows "Reef data is temporarily unavailable"
 with a retry button, instead of any fallback data.
 
-### 4.4 Offline data pipeline
+#### 4.4 Offline data pipeline
 
 ```mermaid
 flowchart LR
@@ -392,36 +481,7 @@ The build output is only a staging area: `pnpm db:atlas` loads it into Tiger in 
 transaction, reads every dataset back through the app's own read code, and
 refuses to commit unless the read-back is identical to what it loaded.
 
-### 4.5 Demo bleaching model
-
-`src/lib/model.ts` is a stand-in for the planned XGBoost + TreeSHAP service. It
-returns the same shape the real API will: probability, base value, one Shapley
-value per pressure, and pairwise interactions. It is a logistic model with
-hand-set (untrained) weights and three interaction pairs,
-$P = \lbrace (h,f), (h,s), (f,l) \rbrace$ for heat, fishing, lionfish and storm:
-
-```math
-z(x) = b + \sum_{k} w_k x_k + \sum_{(a,c) \in P} w_{ac}\, x_a x_c ,
-\qquad p = \sigma(z) = \frac{1}{1 + e^{-z}}
-```
-
-The inputs $x_k$ are normalised pressure magnitudes, for example
-$x_{heat} = \mathrm{clamp}(\mathrm{maxDHW}_{84d}/12,\ 0,\ 1.6)$. The baseline
-$\bar{x}$ is the mean vector over every site and month. Shapley values are exact
-for this model: each linear term is attributed to its own feature, and each
-product term is split evenly between its two features:
-
-```math
-\phi_k = w_k (x_k - \bar{x}_k) + \sum_{(k,c) \in P} \tfrac{1}{2}\, w_{kc} (x_k - \bar{x}_k)(x_c + \bar{x}_c),
-\qquad \sum_k \phi_k = z(x) - z(\bar{x})
-```
-
-The pure interaction shown on the constellation's outer arcs is
-$I_{ac} = w_{ac}(x_a - \bar{x}_a)(x_c - \bar{x}_c)$. Shapley values are
-converted from log-odds to percentage points in proportion to their share of the
-change: $c_k = 100\,(p - p_0)\,\phi_k / (z - z_0)$.
-
-## 5. Voice agent
+### 5. Voice agent
 
 Ask the reef by voice or text (`V` to start/end voice, `Esc` to close), in
 English or Spanish. The existing Gemini agent and all data/page tools remain.
@@ -429,7 +489,6 @@ English or Spanish. The existing Gemini agent and all data/page tools remain.
 Browser `@elevenlabs/react` → ElevenLabs Speech Engine → Vultr's authenticated
 WebSocket endpoint → Gemini and existing tools → streamed text back through
 Speech Engine. ElevenLabs owns STT, turn-taking, interruption, TTS and playback.
-There is no browser WAV recorder, Gemini transcription, or `/api/voice/speak`.
 
 `VoiceAgent` uses `ConversationProvider` and a temporary WebRTC conversation
 token. The server-side TypeScript SDK attaches to `/ws` in the `speech` service;
@@ -452,7 +511,7 @@ still maintains its screen-reader live region and Spanish caption translations.
 Setup, public WebSocket routing, secrets and live verification steps are in
 [Speech Engine deployment](infra/README.md#speech-engine-gemini-remains-the-agent).
 
-### 5.1 Tools
+#### 5.1 Tools
 
 | Tool | Kind | Source | Returns |
 | --- | --- | --- | --- |
@@ -470,7 +529,7 @@ Setup, public WebSocket routing, secrets and live verification steps are in
 | `set_layer(layer, on)` | page | – | `sst`, `storms` or `lionfish` |
 | `set_playing(playing)` | page | – | play or pause time |
 
-### 5.2 Voice API
+#### 5.2 Voice API
 
 | Route | Purpose |
 | --- | --- |
@@ -484,9 +543,9 @@ Setup, public WebSocket routing, secrets and live verification steps are in
 API keys are server-only. Session updates require the random capability returned
 at creation, and upstream WebSockets require ElevenLabs' signed JWT. Public token
 creation and typed questions retain the app's existing lack of user authentication
-and rate limiting. Model overrides remain `GEMINI_MODEL` and `GEMINI_FALLBACK_MODEL`.
+and rate limiting.
 
-## 6. TigerData layer
+### 6. TigerData layer
 
 Tiger Cloud service `db-49612` (PostgreSQL 18.6, TimescaleDB 2.30.1, AWS
 us-east-1) holds every dataset the app shows, in schema `reef_data`: the five
@@ -494,23 +553,7 @@ supplied CSVs (migrations 001 and 002) and the Florida and flagship data that us
 to ship as JSON (migration 003). Full rationale, role setup, and runbook:
 [`apps/web/database/README.md`](apps/web/database/README.md).
 
-### 6.0 How the move was confirmed
-
-Before any file was deleted, Tiger had to reproduce it exactly, and it did
-(2026-09-27):
-
-| Data | Rows | Check | Result |
-| --- | ---: | --- | --- |
-| 5 supplied CSVs | 137,764 | rebuilt from their views (pandas formatting, CRLF) | SHA-256 identical to the reviewed files |
-| 6 Florida datasets (sites, weekly heat, storms, lionfish, simulated activity, sources) | 8,401 | rebuilt from relational tables by the app's own read code | SHA-256 identical to the former `src/data/*.json` |
-| 7 flagship documents | 7 | stored as `json` (exact text) | SHA-256 identical to the former `src/data/flagships/*.json` |
-| `global-reefs.json` (derived from two CSVs) | 2,720 | rebuilt from Tiger with the old build algorithm | identical; the world layer now queries Tiger instead |
-| Voice agent tools | 649 calls | old JSON implementation vs new SQL implementation, 9 sites × 9 date ranges × every tool | 649 of 649 identical |
-
-`pnpm db:verify` repeats the first three checks from the database alone at any
-time, and `pnpm db:export <dir>` writes every CSV back out byte for byte.
-
-### 6.1 Schema
+#### 6.1 Schema
 
 ```mermaid
 erDiagram
@@ -627,23 +670,7 @@ Source-shaped views (`*_records`) join the coordinates back and return exactly
 the CSV columns in CSV order. The explorer reads them, and verification rebuilds
 the CSVs from them.
 
-**Why `json` for the flagship documents.** They are assembled documents
-(narrative, lanes, events, drivers) that one screen reads whole, and their key
-order sets on-screen order. Tiger's `design-postgres-tables` guidance prefers
-`jsonb` but names `json` for exactly this case ("ONLY use JSON if the original
-ordering of the contents MUST be preserved"). The Florida data, which the agent
-queries, is relational.
-
-**Why ordinary tables and not hypertables.** Tiger's hypertable guidance targets
-insert-heavy time series ("Large volumes (1M+ rows), time-based queries,
-infrequent updates"). Columnstore needs more than 100 rows per `segmentby` value
-per chunk. The largest table here has about 106k static annual rows, one per reef
-per year, so chunking would add overhead without benefit. Types follow Tiger's
-`design-postgres-tables` guidance: `double precision` for measured floats,
-`timestamptz` for instants, `date` for days, `boolean NOT NULL` for flags,
-`text` + `CHECK` for bands and statuses.
-
-### 6.2 Access control
+#### 6.2 Access control
 
 ```mermaid
 flowchart TB
@@ -667,7 +694,7 @@ service: `INSERT`, `DELETE`, temporary tables, `CREATE TABLE`,
 rejected. The reader's password is generated locally, and only its SCRAM-SHA-256
 verifier is sent to the server, because the service logs DDL (`log_statement = ddl`).
 
-### 6.3 Import pipeline
+#### 6.3 Import pipeline
 
 ```mermaid
 sequenceDiagram
@@ -715,7 +742,7 @@ transaction, reads each dataset back through `database/atlas.mjs` (the code the
 API serves it with), requires the read-back to equal the input exactly, and
 records its SHA-256 in `atlas_imports`.
 
-### 6.4 Request path
+#### 6.4 Request path
 
 ```mermaid
 sequenceDiagram
@@ -760,7 +787,7 @@ The `/data` page is a server component that calls the same `parseFilters` and
 SQL as parameters. Table, view and column names come from the fixed allowlist
 in `database/datasets.mjs`.
 
-### 6.5 Server modules
+#### 6.5 Server modules
 
 ```mermaid
 classDiagram
@@ -812,7 +839,7 @@ classDiagram
 - **Bundling.** Next.js 16 externalises `pg` by default (`serverExternalPackages`).
   The `server-only` import makes a client import a build error.
 
-### 6.6 API reference
+#### 6.6 API reference
 
 `GET /api/reef-data`
 
@@ -836,9 +863,9 @@ App data routes (all read Tiger; 503 with `Retry-After: 30` and no details when 
 | `GET /api/atlas/world` | every reef (id, coordinates, latest survey year, survey count) and the years each heat dataset covers |
 | `GET /api/atlas/heat?year=YYYY` | peak DHW for every reef in one year (1985–2031) with the year's summary; forecast years add p10/p90, P(DHW ≥ 8) and back-tested skill beside the ten-year baseline; 404 for 2003 and 2026, which the data does not cover |
 
-## 7. Deployment
+### 7. Deployment
 
-### 7.1 Runtime topology
+#### 7.1 Runtime topology
 
 ```mermaid
 flowchart TB
@@ -883,12 +910,12 @@ flowchart TB
   health check, so it cannot cause a restart loop. The `speech` container loads the
   same file for the agent's data tools.
 - **Voice keys in production.** Compose reads
-  `/opt/reefatlas/secrets/voice.env` (or `VOICE_ENV_FILE`) for Gemini and ElevenLabs
+  `/opt/reefatlas/secrets/voice.env` for Gemini and ElevenLabs
   credentials and `ELEVENLABS_SPEECH_ENGINE_ID`. The speech service requires this
   file. See [setup steps](infra/README.md#speech-engine-gemini-remains-the-agent)
   before deploying. Tiger credentials remain in the existing separate env file.
 
-### 7.2 Continuous delivery
+#### 7.2 Continuous delivery
 
 ```mermaid
 sequenceDiagram
@@ -928,7 +955,7 @@ directory, so a rollback is `compose up` of the previous directory. No
 long-lived registry credential is stored: the job token is used for one pull
 and its Docker config is deleted. Details: [`infra/README.md`](infra/README.md).
 
-## 8. Local development
+### 8. Local development
 
 Requirements: Node 24, pnpm 11 (`packageManager` is pinned).
 
@@ -947,6 +974,7 @@ back.
 | Script | Purpose |
 | --- | --- |
 | `pnpm build` / `pnpm start` | production build and server |
+| `pnpm speech:dev` | run the voice agent service next to `pnpm dev` (ElevenLabs needs a public WebSocket URL for it, see [Speech Engine setup](infra/README.md#speech-engine-gemini-remains-the-agent)) |
 | `pnpm typecheck` / `pnpm lint` | TypeScript and ESLint |
 | `pnpm data` | rebuild the Florida bundle from `data/raw` into `data/build/atlas` |
 | `pnpm data:fetch` | download the flagship sources into `data/raw` (large files reduced on the fly, big downloads cached in ignored `data/cache`) |
@@ -963,18 +991,11 @@ back.
 | Variable | Used by | Notes |
 | --- | --- | --- |
 | `TIGER_DATABASE_URL` | app runtime | reader role URL, in ignored `.env.local` or the server secret file |
-| `TIGER_POOL_MAX` | app runtime | 1–20, default 5 per process |
-| `TIGER_CA_CERT_PATH` | runtime and scripts | optional private CA bundle; not needed for Tiger Cloud |
 | `TIGER_ADMIN_URL` | import and provisioning scripts | `tsdbadmin`, in ignored `.env.tiger-admin` only |
-| `TIGER_READER_ENV_FILE` | `db:reader` | output path, default `.env.tiger-reader` |
-| `TIGER_ENV_FILE` | Compose | overrides `/opt/reefatlas/secrets/tiger.env` |
 | `GEMINI_API_KEY` | voice routes | required for streamed agent replies, ask and translate |
-| `GEMINI_MODEL` / `GEMINI_FALLBACK_MODEL` | voice routes | default `gemini-flash-latest` / `gemini-flash-lite-latest`; pin stable IDs for production |
 | `ELEVENLABS_API_KEY` | Speech Engine service | server-side token creation and WebSocket authentication |
 | `ELEVENLABS_SPEECH_ENGINE_ID` | Speech Engine service | `seng_…` returned by `pnpm speech:setup` |
-| `ELEVENLABS_VOICE_ID` | `speech:setup` | default `JBFqnCBsd6RMkjVDRZzb` ("George"), with `eleven_flash_v2_5` |
 | `SPEECH_PUBLIC_WS_URL` | `speech:setup` | public `wss://…/voice-engine` endpoint |
-| `VOICE_ENV_FILE` | Compose | overrides `/opt/reefatlas/secrets/voice.env` |
 
 Without `TIGER_DATABASE_URL` the page shell loads but the experience, `/data` and
 the voice agent's data tools report that reef data is temporarily unavailable:
@@ -983,7 +1004,7 @@ everything except the voice panel and spoken guide works. Test the production st
 `docker compose -f infra/compose.yaml -f infra/compose.local.yaml up --build`
 (serves <http://localhost:8080>).
 
-## 9. Testing and verification
+### 9. Testing and verification
 
 | Check | Command | Covers |
 | --- | --- | --- |
@@ -996,21 +1017,7 @@ everything except the voice panel and spoken guide works. Test the production st
 | Image | CI smoke test | exact published digest under production container restrictions |
 
 At import (2026-09-26), a separate JavaScript parse of the first two CSVs matched
-all 203,909 fields read back from Tiger Cloud. The 2026-09-27 move is described in
-section 6.0. `pnpm test:voice` covers streamed
+all 203,909 fields read back from Tiger Cloud. `pnpm test:voice` covers streamed
 Gemini replies, tool calls and signatures, typed fallback, retry boundaries, and
 Speech Engine interruption/event IDs. Live microphone/playback verification
 requires the configured engine and public WebSocket endpoint.
-
-## 10. Official documentation
-
-- Tiger Cloud: [read-only roles](https://www.tigerdata.com/docs/deploy/tiger-cloud/tiger-cloud-aws/security/read-only-role), [Tiger CLI `db create role --read-only`](https://www.tigerdata.com/docs/reference/tiger-cloud/tiger-cli), [stricter SSL](https://www.tigerdata.com/docs/deploy/tiger-cloud/tiger-cloud-aws/security/strict-ssl), [connection pooling](https://www.tigerdata.com/docs/deploy/tiger-cloud/tiger-cloud-aws/service-management/connection-pooling), [IP allow list](https://www.tigerdata.com/docs/deploy/tiger-cloud/tiger-cloud-aws/security/ip-allow-list), [high availability](https://www.tigerdata.com/docs/deploy/tiger-cloud/tiger-cloud-aws/high-availability/high-availability), [CSV ingest](https://www.tigerdata.com/docs/deploy/mst/ingest-data#bulk-upload-from-csv-files), [hypertables](https://www.tigerdata.com/docs/learn/hypertables/understand-hypertables), Tiger MCP skills `design-postgres-tables`, `find-hypertable-candidates`, `setup-timescaledb-hypertables`
-- PostgreSQL 18: [COPY](https://www.postgresql.org/docs/18/sql-copy.html), [CREATE ROLE](https://www.postgresql.org/docs/18/sql-createrole.html)
-- node-postgres: [SSL](https://node-postgres.com/features/ssl), [Pool](https://node-postgres.com/apis/pool), [pool sizing](https://node-postgres.com/guides/pool-sizing); [pg-copy-streams](https://github.com/brianc/node-pg-copy-streams)
-- Next.js 16.3.6 bundled docs (`apps/web/node_modules/next/dist/docs/`): data security and `server-only`, `serverExternalPackages`, route segment config, [self-hosting](https://nextjs.org/docs/app/guides/self-hosting)
-- Gemini API: [function calling](https://ai.google.dev/gemini-api/docs/function-calling), [audio understanding](https://ai.google.dev/gemini-api/docs/audio), [models and `latest` aliases](https://ai.google.dev/gemini-api/docs/models), [Google Gen AI JavaScript SDK](https://googleapis.github.io/js-genai/)
-- ElevenLabs: [stream text to speech](https://elevenlabs.io/docs/api-reference/text-to-speech/stream)
-- Browser APIs (MDN): [autoplay guide](https://developer.mozilla.org/en-US/docs/Web/Media/Guides/Autoplay), [MediaRecorder](https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder), [OfflineAudioContext](https://developer.mozilla.org/en-US/docs/Web/API/OfflineAudioContext)
-- Deployment: [GitHub Actions secure use](https://docs.github.com/en/actions/reference/security/secure-use), [GHCR](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry), [Compose up `--wait`](https://docs.docker.com/reference/cli/docker/compose/up/), [Caddy automatic HTTPS](https://caddyserver.com/docs/automatic-https), [Vultr firewall rules](https://docs.vultr.com/products/network/firewall-groups/management/rules)
-- Data: [NOAA Coral Reef Watch 5 km (PacIOOS ERDDAP)](https://pae-paha.pacioos.hawaii.edu/erddap/griddap/dhw_5km), [NOAA NHC HURDAT2](https://www.nhc.noaa.gov/data/hurdat/), [USGS NAS](https://nas.er.usgs.gov/), [NASA GIBS](https://nasa-gibs.github.io/gibs-api-docs/)
-- Diagrams: [Mermaid syntax](https://mermaid.js.org/intro/syntax-reference.html), [GitHub Mermaid support](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/creating-diagrams)

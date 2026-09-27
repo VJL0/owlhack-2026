@@ -157,14 +157,6 @@ export function maxDhwWindow(siteId: string, t: number, windowDays: number) {
 /** NOAA CRW Bleaching Alert Area levels as published in the 5 km product (0–4). */
 export const BAA_LABELS = ["No stress", "Bleaching watch", "Bleaching warning", "Alert level 1", "Alert level 2"];
 
-/** CRW's published interpretation of Degree Heating Weeks. */
-export function dhwMeaning(dhw: number) {
-  if (dhw >= 8) return "severe bleaching and significant mortality likely";
-  if (dhw >= 4) return "significant bleaching likely";
-  if (dhw > 0) return "heat stress accumulating";
-  return "no accumulated heat stress";
-}
-
 // ------------------------------------------------------------------ storms
 
 export interface StormFix {

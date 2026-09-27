@@ -15,3 +15,8 @@ tiger-cloud-*-credentials.*
 data/cache/
 # Pipeline output loaded into Tiger Cloud by `pnpm db:atlas` (the app reads Tiger)
 data/build/
+
+# Python bytecode and virtualenvs
+__pycache__/
+*.pyc
+.venv/

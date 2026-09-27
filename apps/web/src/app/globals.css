@@ -895,18 +895,6 @@ body {
   pointer-events: none;
 }
 
-.tl-legend {
-  position: absolute;
-  top: -8px;
-  left: 0;
-  display: flex;
-  gap: 16px;
-  font-family: var(--mono);
-  font-size: 10px;
-  color: rgba(169, 216, 208, 0.62);
-  pointer-events: none;
-}
-
 .tl-storm-label {
   font-family: var(--serif);
   font-style: italic;
