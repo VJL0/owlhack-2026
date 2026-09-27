@@ -38,3 +38,26 @@ export async function generate(params: Omit<GenerateContentParameters, "model">,
   }
   throw last;
 }
+
+/** Retry only before the first chunk: replaying a partial response would repeat speech/tools. */
+export async function* generateStream(params: Omit<GenerateContentParameters, "model">, preferred = GEMINI_MODEL) {
+  const plan = preferred === FALLBACK_MODEL ? [preferred, preferred] : [preferred, preferred, FALLBACK_MODEL, FALLBACK_MODEL];
+  const signal = params.config?.abortSignal;
+  for (let i = 0; i < plan.length; i++) {
+    signal?.throwIfAborted();
+    let emitted = false;
+    try {
+      const stream = await gemini().models.generateContentStream({ ...params, model: plan[i] });
+      for await (const res of stream) {
+        signal?.throwIfAborted();
+        emitted = true;
+        yield { res, model: plan[i] };
+      }
+      return;
+    } catch (e) {
+      signal?.throwIfAborted();
+      if (emitted || !isBusy(e) || i === plan.length - 1) throw e;
+      await import("node:timers/promises").then(({ setTimeout }) => setTimeout(400 * (i + 1), undefined, { signal }));
+    }
+  }
+}

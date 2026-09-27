@@ -101,3 +101,66 @@ replaced. It does not claim zero downtime or resilience to loss of the server.
 Action releases were resolved with `gh api repos/<owner>/<action>/releases/latest`
 and verified through `gh api repos/<owner>/<action>/commits/<tag>`:
 checkout v7.0.1, setup-buildx v4.4.1, login v4.6.0, build-push v7.4.0.
+
+## Speech Engine (Gemini remains the agent)
+
+The `speech` service runs the ElevenLabs TypeScript SDK on port 3001 alongside
+Next.js. Caddy exposes only `wss://reefatlas.us/voice-engine`, rewriting it to
+`/ws`. The SDK authenticates incoming ElevenLabs connections; do not disable auth.
+The service's HTTP session API stays on the Docker network, behind Next.js's
+same-origin `/api/voice/session` route. Each browser receives a temporary WebRTC
+conversation token and a random session capability for context/actions. The API
+key is never returned to the browser.
+
+Before deploying this change:
+
+1. In `apps/web/.env.local`, set `GEMINI_API_KEY`, `ELEVENLABS_API_KEY`, and
+   `SPEECH_PUBLIC_WS_URL=wss://reefatlas.us/voice-engine`.
+2. Run `pnpm speech:setup` from `apps/web`. This creates a **Speech Engine**
+   resource (not an ElevenAgents agent), enabling the
+   first-message override for scene narration, and selecting required client events.
+   Set the printed `ELEVENLABS_SPEECH_ENGINE_ID=seng_…` in `.env.local`.
+   Running the command with an existing ID updates that resource instead and
+   preserves its dashboard voice unless `ELEVENLABS_VOICE_ID` is explicitly set.
+3. Provision `/opt/reefatlas/secrets/voice.env` on Vultr with
+   `GEMINI_API_KEY`, `ELEVENLABS_API_KEY`, `ELEVENLABS_SPEECH_ENGINE_ID`, and any
+   existing Gemini model overrides. Keep this file private. Compose reads it for
+   both services. It is required for the new speech service to become healthy.
+4. Deploy through the existing main-branch workflow. No additional public port
+   or firewall change is needed. Caddy allows ElevenLabs WebRTC connections in CSP.
+
+For local development, run `pnpm dev` and `pnpm speech:dev` from `apps/web` in
+separate terminals. ElevenLabs must reach the local Speech Engine process through
+an HTTPS tunnel: set a development engine's `SPEECH_PUBLIC_WS_URL` to that tunnel's
+`wss://…/ws` URL and run `pnpm speech:setup`. Use a separate development engine ID
+so testing doesn't redirect production traffic. Local Compose accepts
+`VOICE_ENV_FILE=/absolute/path/to/voice.env`.
+
+Press V or click the microphone once to start a continuous conversation. Speak
+naturally; ElevenLabs detects turns and interrupts playback on barge-in. Press V
+again or close the panel to end it. Typed questions still use `/api/voice/ask`
+when voice is disconnected or unavailable; during a voice session they use the
+SDK's text input. Scene narration and replay also go through Speech Engine;
+starting the spoken guide may ask for microphone permission (the guide starts
+muted until the user enables conversation).
+
+Gemini's full tool loop streams text, retains thought signatures and function
+responses, and receives the SDK's abort signal. Cancelled turns cannot publish
+pending navigation actions. Existing data/page tool implementations are unchanged.
+The existing `REEF_DATA=json` default is unchanged; `REEF_DATA=tiger` was already
+unsupported by the agent's data adapter before this migration.
+
+Validation: `pnpm test:voice`, `pnpm typecheck`, and `pnpm build`. After deployment,
+verify a spoken reef question, a page-navigation command, a follow-up using
+"this reef", barge-in during a long reply, typed fallback with microphone denied,
+and closing/reopening the session. A real audio test requires ElevenLabs
+credentials, a configured engine, and the public WebSocket endpoint.
+
+Official references used September 27, 2026:
+[Speech Engine quickstart](https://elevenlabs.io/docs/eleven-api/guides/cookbooks/speech-engine),
+[server SDK](https://elevenlabs.io/docs/eleven-api/resources/libraries/speech-engine/javascript-sdk-reference),
+[upstream protocol](https://elevenlabs.io/docs/api-reference/speech-engine/speech-engine-upstream),
+[conversation tokens](https://elevenlabs.io/docs/api-reference/conversations/get-webrtc-token),
+[React SDK](https://elevenlabs.io/docs/eleven-agents/libraries/react).
+The shared token API calls its resource parameter `agentId`; it accepts the
+Speech Engine `seng_…` ID and does not move the Gemini agent to ElevenAgents.

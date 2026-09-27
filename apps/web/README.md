@@ -5,7 +5,7 @@ A cinematic 3D journey into Florida's Coral Reef, 2016–2024: from the night si
 ```bash
 pnpm install
 pnpm dev            # http://localhost:3000 (copies Cesium into public/cesium first)
-pnpm build          # static production build
+pnpm build          # Next.js production build + Speech Engine server bundle
 pnpm data           # rebuild src/data/*.json from /data/raw
 ```
 
@@ -70,3 +70,13 @@ scripts/               copy-cesium.mjs, build-data.mjs
 ## Deployment
 
 Production runs on Vultr behind Caddy at https://reefatlas.us. See [`infra/README.md`](../../infra/README.md). Smoke-test the production stack locally with `docker compose -f infra/compose.yaml -f infra/compose.local.yaml up --build`.
+
+## Voice development
+
+The existing Gemini agent is voiced by ElevenLabs Speech Engine. Set the
+server-only keys and engine ID in `.env.local` (see `.env.example`), then run
+`pnpm speech:dev` alongside `pnpm dev`. ElevenLabs needs a public WebSocket URL
+for that service. See [Speech Engine setup](../../infra/README.md#speech-engine-gemini-remains-the-agent)
+for engine creation, a development tunnel, and Vultr deployment.
+
+`pnpm test:voice` checks streaming, tool preservation, interruption and typed fallback.

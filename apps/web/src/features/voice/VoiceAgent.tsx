@@ -6,8 +6,8 @@ import { isoDate } from "@/lib/time";
 import { runAction } from "@/lib/navigation";
 import { MAP_LAYERS, type UiAction } from "@/lib/voiceActions";
 import { STRINGS } from "./i18n";
-import { startRecording } from "./recorder";
-import { isSpeaking, speak, stopSpeaking } from "./speech";
+import { ConversationProvider, useConversation } from "@elevenlabs/react";
+import { bindSpeech, stopSpeaking } from "./speech";
 
 type Status = "idle" | "listening" | "transcribing" | "thinking" | "speaking";
 
@@ -36,31 +36,171 @@ function MicIcon() {
   );
 }
 
-/** Voice loop: mic → /transcribe (Gemini) → /ask (Gemini + data and page tools) → /speak (ElevenLabs). */
 export default function VoiceAgent() {
+  return <ConversationProvider><VoicePanel /></ConversationProvider>;
+}
+
+function pageContext() {
+  const s = useStore.getState();
+  return {
+    view: s.phase === "reef" ? "reef" : s.phase === "flagship" || s.phase === "splat" ? "flagship" : s.phase === "world" ? "world" : "map",
+    siteId: s.phase === "reef" ? s.siteId : undefined,
+    flagshipId: s.phase === "flagship" || s.phase === "splat" ? s.flagshipId : undefined,
+    flagshipDate: (s.phase === "flagship" || s.phase === "splat") && s.flagshipT !== null ? flagshipIso(s.flagshipT) : undefined,
+    date: isoDate(s.t), layers: MAP_LAYERS.filter((l) => s.layers[l]), lang: s.lang,
+  };
+}
+
+/** ElevenLabs owns microphone capture, turn-taking, interruption and playback. */
+function VoicePanel() {
   const phase = useStore((s) => s.phase);
   const guide = useStore((s) => s.guide);
   const setGuide = useStore((s) => s.setGuide);
   const lang = useStore((s) => s.lang);
   const [open, setOpen] = useState(false);
-  const [status, setStatus] = useState<Status>("idle");
+  const [work, setWork] = useState<"idle" | "thinking" | "transcribing">("idle");
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState("");
   const [tools, setTools] = useState<string[]>([]);
   const [error, setError] = useState("");
   const [draft, setDraft] = useState("");
-  const stopRef = useRef<(() => Promise<Blob>) | null>(null);
+  const [sessionKey, setSessionKey] = useState<string | null>(null);
+  const [micMuted, setMicMuted] = useState(false);
+  const [awaitingSpeech, setAwaitingSpeech] = useState(false);
+  const heardAgent = useRef(false);
+  const keyRef = useRef<string | null>(null);
+  const pendingNarration = useRef<string | null>(null);
   /** Bumped on close/cancel so in-flight requests know to drop their result. */
   const runRef = useRef(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const t = STRINGS[lang];
 
-  async function say(text: string, id: number) {
-    setStatus("speaking");
-    // No language lock: answers come back in whatever language was asked, and the voice detects it.
-    await speak(text);
-    if (runRef.current === id) setStatus("idle");
+  function releaseSession() {
+    const key = keyRef.current;
+    keyRef.current = null;
+    setSessionKey(null);
+    pendingNarration.current = null;
+    heardAgent.current = false;
+    setAwaitingSpeech(false);
+    if (key) fetch("/api/voice/session", { method: "DELETE", headers: { authorization: `Bearer ${key}` }, keepalive: true }).catch(() => {});
+    setWork("idle");
   }
+  const conversation = useConversation({
+    micMuted,
+    onConnect: () => setWork("idle"),
+    onDisconnect: () => releaseSession(),
+    onError: (message) => { setError(message); conversation.endSession(); releaseSession(); },
+    onMessage: ({ source, message }) => {
+      if (source === "user") {
+        if (message.startsWith("[scene:")) return;
+        runRef.current++;
+        pendingNarration.current = null;
+        setAwaitingSpeech(true);
+        setQuestion(message); setAnswer(""); setTools([]); setWork("thinking");
+      } else { setAnswer(message); setWork("idle"); }
+    },
+    onInterruption: () => { runRef.current++; pendingNarration.current = null; setAwaitingSpeech(true); setWork("thinking"); },
+    onModeChange: ({ mode }) => {
+      if (mode === "speaking") heardAgent.current = true;
+      else if (heardAgent.current) { heardAgent.current = false; setAwaitingSpeech(false); }
+    },
+  });
+  const status: Status = conversation.status === "connecting" ? "transcribing" : conversation.isSpeaking ? "speaking" : work !== "idle" ? work
+    : conversation.status === "connected" && !micMuted ? "listening" : "idle";
+
+  async function sessionRequest<T>(method: string, body?: unknown, query = "", key = keyRef.current): Promise<T> {
+    return postJson<T>(`/api/voice/session${query}`, {
+      method, headers: { "content-type": "application/json", authorization: `Bearer ${key}` },
+      body: body === undefined ? undefined : JSON.stringify(body),
+    });
+  }
+
+  async function begin(firstMessage?: string) {
+    const id = ++runRef.current;
+    setWork("transcribing"); setError("");
+    setMicMuted(!!firstMessage);
+    setAwaitingSpeech(!!firstMessage);
+    try {
+      const session = await postJson<{ token: string; key: string }>("/api/voice/session", {
+        method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ context: pageContext() }),
+      });
+      if (id !== runRef.current) {
+        void fetch("/api/voice/session", { method: "DELETE", headers: { authorization: `Bearer ${session.key}` } }).catch(() => {});
+        return;
+      }
+      keyRef.current = session.key;
+      setSessionKey(session.key);
+      conversation.startSession({
+        conversationToken: session.token, connectionType: "webrtc",
+        ...(firstMessage ? { overrides: { agent: { firstMessage } } } : {}),
+      });
+    } catch (e) {
+      if (id === runRef.current) {
+        setError(e instanceof Error ? e.message : "Voice is unavailable. You can still type a question.");
+        releaseSession();
+      }
+    }
+  }
+
+  async function narrate(text: string) {
+    if ((conversation.status === "disconnected" || conversation.status === "error") && work === "idle") { await begin(text); return; }
+    if (conversation.status !== "connected" || conversation.isSpeaking || awaitingSpeech || work !== "idle") {
+      pendingNarration.current = text;
+      return;
+    }
+    const id = runRef.current;
+    const { marker } = await sessionRequest<{ marker: string }>("PATCH", { narration: text });
+    if (id === runRef.current && keyRef.current) {
+      setAwaitingSpeech(true);
+      conversation.sendUserMessage(marker);
+    }
+  }
+  const flushNarration = useEffectEvent(() => {
+    const text = pendingNarration.current;
+    if (!text || !guide || conversation.status !== "connected" || conversation.isSpeaking || awaitingSpeech || work !== "idle") return;
+    pendingNarration.current = null;
+    void narrate(text).catch(() => {});
+  });
+  useEffect(() => { flushNarration(); }, [conversation.status, conversation.isSpeaking, awaitingSpeech, work, guide]);
+  const speakScene = useEffectEvent(narrate);
+  const endSpeech = useEffectEvent(() => halt());
+  useEffect(() => bindSpeech((text) => speakScene(text), () => endSpeech()), []);
+
+  // Context and tool actions stay in our app; Speech Engine only carries speech/text.
+  useEffect(() => {
+    if (!sessionKey) return;
+    let active = true;
+    let cursor = 0;
+    let contextSent = "";
+    let timer: ReturnType<typeof setTimeout>;
+    const poll = async () => {
+      try {
+        const current = JSON.stringify(pageContext());
+        if (current !== contextSent) {
+          await sessionRequest("PATCH", { context: JSON.parse(current) }, "", sessionKey);
+          if (!active) return;
+          contextSent = current;
+        }
+        const update = await sessionRequest<{ events: { id: number; result: { trace: { name: string }[]; actions: UiAction[] } }[]; thinking: boolean; error?: string }>("GET", undefined, `?after=${cursor}`, sessionKey);
+        if (!active) return;
+        setWork(update.thinking ? "thinking" : "idle");
+        if (update.error) setError(update.error);
+        for (const event of update.events) {
+          if (event.id <= cursor) continue;
+          cursor = event.id;
+          setTools(event.result.trace.map((x) => x.name.replace(/^get_/, "").replaceAll("_", " ")));
+          event.result.actions.forEach(runAction);
+        }
+      } catch (e) {
+        if (active) { setError(e instanceof Error ? e.message : "Voice connection failed"); conversation.endSession(); releaseSession(); }
+      }
+      if (active) timer = setTimeout(poll, 300);
+    };
+    void poll();
+    return () => { active = false; clearTimeout(timer); };
+  // SDK controls are stable; key owns the lifetime of this polling loop.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessionKey]);
 
   async function run(fn: (run: number) => Promise<void>) {
     const id = ++runRef.current;
@@ -70,90 +210,52 @@ export default function VoiceAgent() {
     } catch (e) {
       if (e instanceof Cancelled || runRef.current !== id) return;
       setError(e instanceof Error ? e.message : String(e));
-      setStatus("idle");
+      setWork("idle");
     }
   }
 
   async function ask(q: string, id: number) {
+    pendingNarration.current = null;
     setQuestion(q);
     setAnswer("");
     setTools([]);
-    setStatus("thinking");
-    const s = useStore.getState();
+    setWork("thinking");
+    if (conversation.status === "connected") {
+      await sessionRequest("PATCH", { context: pageContext() });
+      if (id === runRef.current) { setAwaitingSpeech(true); conversation.sendUserMessage(q); }
+      return;
+    }
     const res = await postJson<{ answer: string; trace: { name: string }[]; actions: UiAction[] }>("/api/voice/ask", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        question: q,
-        view: s.phase === "reef" ? "reef" : s.phase === "flagship" || s.phase === "splat" ? "flagship" : s.phase === "world" ? "world" : "map",
-        siteId: s.phase === "reef" ? s.siteId : undefined,
-        flagshipId: s.phase === "flagship" || s.phase === "splat" ? s.flagshipId : undefined,
-        flagshipDate: (s.phase === "flagship" || s.phase === "splat") && s.flagshipT !== null ? flagshipIso(s.flagshipT) : undefined,
-        date: isoDate(s.t),
-        layers: MAP_LAYERS.filter((l) => s.layers[l]),
-        lang: s.lang,
-      }),
+      method: "POST", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ question: q, ...pageContext() }),
     });
     if (runRef.current !== id) throw new Cancelled();
     setAnswer(res.answer);
     setTools(res.trace.filter((x) => x.name.startsWith("get_") || x.name === "compare_sites").map((x) => x.name.replace(/^get_/, "").replaceAll("_", " ")));
     res.actions.forEach(runAction);
-    await say(res.answer, id);
+    setWork("idle");
   }
 
-  /** Stop everything in flight: recording, requests, playback. */
   function halt() {
     runRef.current++;
-    stopSpeaking();
-    const stop = stopRef.current;
-    stopRef.current = null;
-    stop?.().catch(() => {});
-    setStatus("idle");
+    conversation.endSession();
+    releaseSession();
   }
 
-  function close() {
-    halt();
-    setOpen(false);
-  }
+  function close() { halt(); setOpen(false); }
 
-  /** The one main action: start listening, send, or stop speech, depending on state. */
   function toggleMic() {
     setOpen(true);
-    if (status === "speaking" || (status === "idle" && isSpeaking())) {
-      halt(); // also silences the guide mid-sentence
-    } else if (status === "idle") {
-      run(async (id) => {
-        const stop = await startRecording();
-        if (runRef.current !== id) {
-          stop().catch(() => {});
-          return;
-        }
-        stopRef.current = stop;
-        setStatus("listening");
-      });
-    } else if (status === "listening" && stopRef.current) {
-      const stop = stopRef.current;
-      stopRef.current = null;
-      run(async (id) => {
-        setStatus("transcribing");
-        const wav = await stop();
-        const { text } = await postJson<{ text: string }>("/api/voice/transcribe", {
-          method: "POST",
-          headers: { "content-type": "audio/wav" },
-          body: wav,
-        });
-        if (runRef.current !== id) return;
-        if (!text) throw new Error(t.notHeard);
-        await ask(text, id);
-      });
-    }
+    if (conversation.status === "connected" && micMuted) setMicMuted(false);
+    else if (conversation.status === "connected" || conversation.status === "connecting" || sessionKey || work === "transcribing") halt();
+    else void begin().catch((e) => { setError(e instanceof Error ? e.message : "Voice failed"); setWork("idle"); });
   }
 
   // V talks from anywhere. Esc closes this panel, or silences the guide, before the scene's own Esc runs.
   const onKey = useEffectEvent((e: KeyboardEvent) => {
     if (e.metaKey || e.ctrlKey || e.altKey) return;
     const typing = (e.target as HTMLElement).closest("input, textarea");
-    if (e.key === "Escape" && (open || isSpeaking())) {
+    if (e.key === "Escape" && (open || conversation.status !== "disconnected")) {
       e.preventDefault();
       e.stopPropagation(); // capture phase: keeps Esc from also leaving the reef
       if (open) close();
@@ -169,17 +271,16 @@ export default function VoiceAgent() {
     return () => window.removeEventListener("keydown", handler, true);
   }, []);
 
-  // On unmount, drop in-flight work and release the mic. Speech is page-wide and may belong to the guide.
   useEffect(() => {
     const runs = runRef;
-    const rec = stopRef;
     return () => {
       runs.current++;
-      rec.current?.().catch(() => {});
+      const key = keyRef.current;
+      if (key) void fetch("/api/voice/session", { method: "DELETE", headers: { authorization: `Bearer ${key}` }, keepalive: true }).catch(() => {});
     };
   }, []);
 
-  const busy = status === "transcribing" || status === "thinking";
+  const busy = conversation.status === "connecting" || work === "transcribing" || (work === "thinking" && conversation.status !== "connected");
   const hasLog = question || answer || error;
 
   if (!open) {
@@ -240,7 +341,7 @@ export default function VoiceAgent() {
             )}
             <span className="voice-actions">
               {answer && status === "idle" && (
-                <button className="voice-link" onClick={() => run((id) => say(answer, id))}>
+                <button className="voice-link" onClick={() => run(() => narrate(answer))}>
                   {t.replay}
                 </button>
               )}
@@ -263,7 +364,7 @@ export default function VoiceAgent() {
       ) : (
         <div className="voice-suggest">
           {t.suggestions[phase === "reef" ? "reef" : phase === "flagship" || phase === "splat" ? "flagship" : phase === "world" ? "world" : "region"].map((q) => (
-            <button key={q} className="voice-chip" disabled={status !== "idle"} onClick={() => run((id) => ask(q, id))}>
+            <button key={q} className="voice-chip" disabled={busy} onClick={() => run((id) => ask(q, id))}>
               {q}
             </button>
           ))}
@@ -275,7 +376,7 @@ export default function VoiceAgent() {
         onSubmit={(e) => {
           e.preventDefault();
           const q = draft.trim();
-          if (!q || status !== "idle") return;
+          if (!q || busy) return;
           setDraft("");
           run((id) => ask(q, id));
         }}
@@ -285,9 +386,8 @@ export default function VoiceAgent() {
           className="voice-mic"
           data-status={status}
           onClick={toggleMic}
-          disabled={busy}
-          aria-pressed={status === "listening"}
-          aria-label={status === "listening" ? t.send : status === "speaking" ? t.stop : t.talk}
+          aria-pressed={conversation.status === "connected" && !micMuted}
+          aria-label={conversation.status === "connected" && !micMuted ? t.stop : t.talk}
         >
           {status === "speaking" ? <span className="voice-stop" aria-hidden="true" /> : <MicIcon />}
         </button>
@@ -298,7 +398,7 @@ export default function VoiceAgent() {
           onChange={(e) => setDraft(e.target.value)}
           placeholder={t.placeholder}
           aria-label={t.placeholder}
-          disabled={status !== "idle"}
+          disabled={busy}
         />
       </form>
     </section>

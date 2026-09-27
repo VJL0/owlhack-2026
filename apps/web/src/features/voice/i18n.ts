@@ -17,8 +17,8 @@ export const STRINGS = {
     pill: "Ask the reef",
     status: {
       idle: "Tap the mic or press V to talk",
-      listening: "Listening… tap the mic or press V to send",
-      transcribing: "Hearing you…",
+      listening: "Listening… speak naturally, or press V to end",
+      transcribing: "Connecting…",
       thinking: "Checking the data…",
       speaking: "Speaking… tap the mic or press V to stop",
     },
@@ -54,8 +54,8 @@ export const STRINGS = {
     pill: "Pregunta al arrecife",
     status: {
       idle: "Toca el micrófono o pulsa V para hablar",
-      listening: "Escuchando… toca el micrófono o pulsa V para enviar",
-      transcribing: "Te escucho…",
+      listening: "Escuchando… habla, o pulsa V para terminar",
+      transcribing: "Conectando…",
       thinking: "Consultando los datos…",
       speaking: "Hablando… toca el micrófono o pulsa V para parar",
     },

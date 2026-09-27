@@ -86,7 +86,7 @@ flowchart LR
         UI["Next.js client<br/>React 19 + zustand"]
         Globe["CesiumJS 1.145 globe<br/>static script from /cesium"]
         Reef["React Three Fiber reef<br/>three r186 + GLSL"]
-        Voice["Voice panel + spoken guide<br/>mic, WAV encoder, speech queue"]
+        Voice["Voice panel + spoken guide<br/>@elevenlabs/react, WebRTC"]
         UI --- Globe
         UI --- Reef
         UI --- Voice
@@ -95,7 +95,10 @@ flowchart LR
     subgraph Vultr["Vultr VM 66.135.11.15 (Docker Compose project reefatlas)"]
         Caddy["Caddy 2.11<br/>HTTPS, HTTP/3, HSTS, CSP"]
         Web["Next.js 16 standalone<br/>Node 24, read-only container"]
-        Secret[("/opt/reefatlas/secrets/tiger.env")]
+        Secret[("/opt/reefatlas/secrets/tiger.env<br/>voice.env")]
+        Speech["Speech Engine SDK service<br/>existing Gemini tool loop"]
+        Caddy -->|"/voice-engine"| Speech
+        Secret -.->|"env_file"| Speech
         Caddy -->|"reverse_proxy web:3000"| Web
         Secret -.->|"env_file"| Web
     end
@@ -105,8 +108,8 @@ flowchart LR
     end
 
     subgraph AI["AI services"]
-        Gemini["Google Gemini API<br/>transcribe, agent, translate"]
-        Eleven["ElevenLabs<br/>text-to-speech stream"]
+        Gemini["Google Gemini API<br/>agent, translate"]
+        Eleven["ElevenLabs Speech Engine<br/>STT, turns, interruption, TTS"]
     end
 
     subgraph Tiles["Public imagery"]
@@ -125,13 +128,17 @@ flowchart LR
     Globe -->|"tiles"| GIBS
     Web -->|"pg Pool, verified TLS<br/>role reef_atlas_reader"| PG
     Web -->|"@google/genai"| Gemini
-    Web -->|"fetch, xi-api-key"| Eleven
+    Web -->|"private session API"| Speech
+    Speech -->|"temporary tokens"| Eleven
+    Voice <-->|"WebRTC"| Eleven
+    Eleven <-->|"authenticated public WebSocket"| Caddy
+    Speech -->|"streaming @google/genai"| Gemini
     GHA -->|"push"| GHCR
     GHA -->|"SSH deploy key"| Vultr
     Vultr -->|"docker pull"| GHCR
 ```
 
-The browser talks to one origin. Caddy terminates TLS, adds the security
+The browser uses our origin for app data and ElevenLabs for WebRTC audio. Caddy terminates TLS, adds the security
 headers, compresses responses, and proxies to the Next.js server. Most of the
 experience is static: the observed Florida datasets are baked into JSON at build
 time and ship with the client bundle, so the 3D experience needs only the map
@@ -144,9 +151,9 @@ Three kinds of request reach the server:
   server.
 - `/api/health` is the liveness probe.
 
-No credential reaches the browser. The browser calls Gemini and ElevenLabs only
-through these routes, so the CSP's `connect-src 'self'` and `default-src 'self'`
-(which covers `<audio>`) need no extra hosts.
+API keys stay on the server. The browser receives a temporary conversation token
+and a per-session capability for page context and actions. CSP permits the
+ElevenLabs API and WebRTC hosts.
 
 ## 3. Repository layout
 
@@ -156,13 +163,13 @@ apps/web/                      Next.js 16 app (the only deployable)
     page.tsx                   the 3D experience (client component tree)
     data/page.tsx              /data explorer (server component, reads Tiger)
     api/reef-data/route.ts     GET /api/reef-data (route handler, reads Tiger)
-    api/voice/                 transcribe, ask, speak, translate (Gemini, ElevenLabs)
+    api/voice/                 ask, session, translate (Gemini, Speech Engine)
     api/health/route.ts        liveness probe for Docker and Caddy
     globals.css, interface.css base rules, then the glass interface layer
   src/features/                experience, globe, dive, reef, hud, timeline, intro
   src/features/atlas/          world view, flagship dossier, evidence timeline, side cards
   src/features/splat/          Soneva 3D surveys (Spark Gaussian splats in React Three Fiber)
-  src/features/voice/          VoiceAgent panel, Narrator, speech queue, recorder, i18n
+  src/features/voice/          VoiceAgent + React SDK, Narrator, narration bridge, i18n
   src/lib/                     data access, time, demo model, store, narrative,
                                navigation (page moves), voiceActions (UiAction types)
   src/lib/server/              server-only: pg pool and dataset queries
@@ -391,212 +398,36 @@ change: $c_k = 100\,(p - p_0)\,\phi_k / (z - z_0)$.
 
 ## 5. Voice agent
 
-Ask the reef by voice or text (`V` to talk, `Esc` to close), in English or
-Spanish. The loop is: microphone → Gemini transcription → Gemini agent with data
-and page tools → ElevenLabs speech. An optional spoken guide narrates each
-scene as it arrives.
+Ask the reef by voice or text (`V` to start/end voice, `Esc` to close), in
+English or Spanish. The existing Gemini agent and all data/page tools remain.
 
-### 5.1 Components
+Browser `@elevenlabs/react` → ElevenLabs Speech Engine → Vultr's authenticated
+WebSocket endpoint → Gemini and existing tools → streamed text back through
+Speech Engine. ElevenLabs owns STT, turn-taking, interruption, TTS and playback.
+There is no browser WAV recorder, Gemini transcription, or `/api/voice/speak`.
 
-```mermaid
-classDiagram
-    direction LR
-    class VoiceAgent {
-        <<client features/voice/VoiceAgent.tsx>>
-        -Status status
-        +toggleMic()
-        +ask(question)
-        +halt()
-    }
-    class Narrator {
-        <<client features/voice/Narrator.tsx>>
-        +describe settled scene once
-    }
-    class SpeechQueue {
-        <<client features/voice/speech.ts>>
-        +speak(text, lang, interrupt or queue)
-        +stopSpeaking()
-    }
-    class Recorder {
-        <<client features/voice/recorder.ts>>
-        +startRecording() stop
-        -toWav(blob) 16 kHz mono PCM
-    }
-    class Navigation {
-        <<client lib/navigation.ts>>
-        +runAction(UiAction)
-        +goToReef(siteId)
-        +ascend()
-    }
-    class runAgent {
-        <<server server/agent/runAgent.ts>>
-        +runAgent(question, ctx) answer, trace, actions
-    }
-    class DataTools {
-        <<server server/agent/tools.ts>>
-        +toolDeclarations 5
-        +runTool(name, args)
-    }
-    class PageTools {
-        <<server server/agent/pageTools.ts>>
-        +pageToolDeclarations 5
-        +toAction(name, args) UiAction
-    }
-    class GeminiClient {
-        <<server server/gemini.ts>>
-        +generate(params, preferred) res, model
-        +isBusy(e) boolean
-    }
-    class ReefData {
-        <<interface server/reef/ReefData.ts>>
-        +listSites() SiteInfo[]
-        +thermalSummary(siteId, from, to) ThermalSummary
-        +stormsNear(siteId, maxKm, from, to) StormPass[]
-        +lionfishNear(siteId, radiusKm, from, to) LionfishSummary
-        +activity(siteId, from, to) ActivitySummary
-    }
-    class jsonReefData {
-        <<REEF_DATA=json, default>>
-        +reads the bundled src/data JSON
-    }
-    class TigerReefData {
-        <<planned, REEF_DATA=tiger>>
-    }
-    VoiceAgent ..> Recorder
-    VoiceAgent ..> SpeechQueue
-    VoiceAgent ..> Navigation : runs actions
-    Narrator ..> SpeechQueue
-    VoiceAgent ..> runAgent : POST /api/voice/ask
-    runAgent ..> GeminiClient
-    runAgent ..> DataTools
-    runAgent ..> PageTools
-    DataTools ..> ReefData : getReefData()
-    ReefData <|.. jsonReefData
-    ReefData <|.. TigerReefData
-```
+`VoiceAgent` uses `ConversationProvider` and a temporary WebRTC conversation
+token. The server-side TypeScript SDK attaches to `/ws` in the `speech` service;
+Caddy exposes it at `/voice-engine`. The browser sends current reef, timeline,
+layers and language through `/api/voice/session`, and polls that session for
+validated UI actions and tool traces. Actions still call `runAction`.
 
-The agent reaches data only through five typed tools, never free-form SQL. A
-bad model guess therefore cannot touch a database. The tools call the
-`ReefData` interface, so a Tiger-backed implementation can replace
-`jsonReefData` without changing the agent. Dates are ISO `YYYY-MM-DD`
-and ranges are inclusive, so they map directly to SQL.
+`streamAgent` retains the existing prompt and six-turn tool loop. It streams
+Gemini text immediately, preserves function responses and thought signatures,
+and passes Speech Engine's abort signal to Gemini. Aborted turns cannot publish
+pending page actions. Transient retries happen only before the first chunk, so
+partial speech is never replayed by a retry.
 
-### 5.2 One question, end to end
+Typed questions use `/api/voice/ask` when disconnected, including when microphone
+permission or Speech Engine is unavailable. In an active conversation they use
+`sendUserMessage`. The optional scene guide and replay use the same Speech Engine
+session; the guide starts muted and may request microphone permission. Narrator
+still maintains its screen-reader live region and Spanish caption translations.
 
-```mermaid
-sequenceDiagram
-    autonumber
-    actor U as Viewer
-    participant VA as VoiceAgent
-    participant Rec as recorder.ts
-    participant T as /api/voice/transcribe
-    participant A as /api/voice/ask
-    participant AG as runAgent
-    participant G as Gemini API
-    participant RD as ReefData (json)
-    participant Nav as navigation.ts
-    participant SQ as speech.ts
-    participant S as /api/voice/speak
-    participant EL as ElevenLabs
+Setup, public WebSocket routing, secrets and live verification steps are in
+[Speech Engine deployment](infra/README.md#speech-engine-gemini-remains-the-agent).
 
-    U->>VA: press V or tap the mic
-    VA->>Rec: getUserMedia, MediaRecorder.start()
-    U->>VA: press V again
-    Rec-->>VA: 16 kHz mono 16-bit WAV
-    VA->>T: POST audio/wav (max 10 MB)
-    T->>G: generateContent, inline audio + transcription prompt, temperature 0
-    G-->>T: transcript in the spoken language
-    T-->>VA: text
-    VA->>A: POST question, view, siteId, date, layers, lang
-    A->>AG: runAgent(question, context)
-    loop at most 6 turns
-        AG->>G: contents + system prompt + 10 function declarations
-        alt reply contains function calls
-            par each call in the reply
-                AG->>RD: data tool, e.g. thermalSummary(looe-key, from, to)
-                RD-->>AG: result, or an error the model can correct
-            and
-                AG->>AG: page tool validated into a UiAction
-            end
-            AG->>AG: append the model turn unchanged, then functionResponse parts
-        else reply is text
-            AG-->>A: answer, tool trace, actions
-        end
-    end
-    A-->>VA: answer, trace, actions
-    VA->>Nav: runAction for each UiAction
-    VA->>SQ: speak(answer, interrupt)
-    SQ->>S: audio.src = GET ?text=answer
-    S->>EL: POST /v1/text-to-speech/voice/stream, eleven_flash_v2_5
-    EL-->>S: audio/mpeg chunks
-    S-->>SQ: streamed response, playback starts before it ends
-```
-
-- **Grounding.** The system prompt lists the nine sites and the current page
-  context: map or reef, the site, the timeline date, and the layers shown.
-  "This reef" and "now" therefore have a meaning. It requires tool results
-  before any data answer, exact numbers, units in words, and a spoken note
-  whenever simulated fishing or vessel data is used. It also caps replies at
-  two to four sentences.
-- **Tool loop.** Calls from one reply run in parallel (`Promise.all`). The
-  model's turn is appended unchanged, because Gemini function calling needs the
-  model's thought signatures sent back. The loop stops after six turns.
-- **Page actions.** The server only validates them: site IDs against the nine
-  sites, dates within 2016-01-01…2024-12-31, known layers. The browser then
-  runs them after the answer arrives.
-- **Retries.** `generate()` retries only on 429, 500 and 503: the main model
-  twice, then the fallback model twice, with 400 ms × attempt back-off. Once a
-  fallback answers, the rest of that conversation stays on the fallback model
-  so thought signatures match. Busy errors return 503 to the browser; other
-  failures return 502.
-- **Why WAV.** The browser converts its recording to 16 kHz mono 16-bit WAV
-  with an `OfflineAudioContext` before upload. Gemini downsamples audio to
-  16 kbps and mixes it to one channel anyway.
-
-### 5.3 Voice panel states
-
-```mermaid
-stateDiagram-v2
-    [*] --> idle
-    idle --> listening: V or mic, microphone granted
-    listening --> transcribing: V or mic again
-    transcribing --> thinking: transcript received
-    idle --> thinking: typed question or suggestion chip
-    thinking --> speaking: answer received, page actions run
-    speaking --> idle: audio ended
-    speaking --> idle: V, mic or Esc stops speech
-    listening --> idle: Esc closes the panel
-    transcribing --> idle: nothing heard, or error shown
-    thinking --> idle: error shown (busy 503, failure 502)
-```
-
-Each request carries a run number. Closing or cancelling bumps it, so late
-responses from an abandoned question are dropped instead of spoken. The `V` and
-`Esc` handlers listen in the capture phase. `Esc` therefore closes the panel or
-silences speech before the reef's own `Esc` (leave the reef) can run.
-
-### 5.4 Speech and the spoken guide
-
-- **One voice for the page.** `speech.ts` owns a single `<audio>` element and a
-  queue. Answers use `interrupt` and cut off anything playing. Scene narration
-  uses `queue` and waits its turn, so the agent and the guide never talk over
-  each other.
-- **Autoplay.** Browsers block audible playback until the user has interacted
-  with the page, and `play()` then rejects with `NotAllowedError`. The hero's
-  "Enter with spoken guide" button is that interaction, so the guide can speak
-  at once. Lines blocked before any click are dropped quietly.
-- **Narrator.** It describes each settled scene once: the welcome during the
-  flight, the region with the current month, and each reef once it has drawn
-  and the water crossing has finished. The text always goes to a hidden
-  `aria-live` region for screen readers. It is spoken only when the guide is on.
-- **Languages.** The guide's language is offered from `navigator.languages`,
-  Spanish if the browser prefers it, otherwise English. Scripted lines pass
-  `language_code` so ElevenLabs Flash v2.5 locks the pronunciation. Agent
-  answers omit it, because the agent replies in the language of the question.
-  English data captions are translated through `/api/voice/translate` and cached
-  per sentence, on the server and in the browser.
-
-### 5.5 Tools
+### 5.1 Tools
 
 | Tool | Kind | Source | Returns |
 | --- | --- | --- | --- |
@@ -614,25 +445,21 @@ silences speech before the reef's own `Esc` (leave the reef) can run.
 | `set_layer(layer, on)` | page | – | `sst`, `storms` or `lionfish` |
 | `set_playing(playing)` | page | – | play or pause time |
 
-### 5.6 Voice API
+### 5.2 Voice API
 
-| Route | Input | Output | Errors |
-| --- | --- | --- | --- |
-| `POST /api/voice/transcribe` | raw `audio/*` body, ≤ 10 MB | `{ text }` | 415 not audio, 400 empty, 413 too large, 503 busy, 502 |
-| `POST /api/voice/ask` | `{ question, view?, siteId?, date?, layers?, lang? }` | `{ answer, trace, actions }` | 400 no question, 503 busy, 502 |
-| `GET /api/voice/speak?text=&lang=` | text ≤ 1,200 characters | `audio/mpeg` stream, `no-store` | 400, 413, 500 key missing, 502 |
-| `POST /api/voice/translate` | `{ text ≤ 1,200 chars, lang: "es" }` | `{ text }`, cached in process memory | 400, 503, 502 |
+| Route | Purpose |
+| --- | --- |
+| `POST /api/voice/session` | Mint temporary conversation token and browser session capability |
+| `GET /api/voice/session?after=` | Read new action/trace events using the session capability |
+| `PATCH /api/voice/session` | Update page context or request scripted scene narration |
+| `DELETE /api/voice/session` | End and release the session |
+| `POST /api/voice/ask` | Typed fallback: `{ question, ...context }` → `{ answer, trace, actions }` |
+| `POST /api/voice/translate` | Translate the existing scripted guide captions |
 
-`/speak` is a `GET` so an `<audio src>` can stream it and start playing before
-the whole file arrives.
-
-**Current limits:**
-- These routes have no authentication or rate limiting, and each call spends
-  Gemini or ElevenLabs quota.
-- The default model is Google's `gemini-flash-latest` alias, which is
-  hot-swapped on new releases. Google advises most production apps to pin a
-  specific stable model. Set `GEMINI_MODEL` (and `GEMINI_FALLBACK_MODEL`) to do
-  that.
+API keys are server-only. Session updates require the random capability returned
+at creation, and upstream WebSockets require ElevenLabs' signed JWT. Public token
+creation and typed questions retain the app's existing lack of user authentication
+and rate limiting. Model overrides remain `GEMINI_MODEL` and `GEMINI_FALLBACK_MODEL`.
 
 ## 6. TigerData layer
 
@@ -931,12 +758,11 @@ flowchart TB
 - **Secret file is optional.** If `tiger.env` is missing the demo still boots,
   and the dataset routes return 503. A database outage never fails the
   container health check, so it cannot cause a restart loop.
-- **Voice keys in production.** `infra/compose.yaml` loads exactly one env file
-  into the web container: `/opt/reefatlas/secrets/tiger.env`, or
-  `TIGER_ENV_FILE`. `GEMINI_API_KEY` and `ELEVENLABS_API_KEY` must be added to
-  that file for the voice routes to work in production. Without them, `/ask`,
-  `/transcribe` and `/translate` return 502 and `/speak` returns 500. The rest
-  of the site is unaffected.
+- **Voice keys in production.** Compose reads
+  `/opt/reefatlas/secrets/voice.env` (or `VOICE_ENV_FILE`) for Gemini and ElevenLabs
+  credentials and `ELEVENLABS_SPEECH_ENGINE_ID`. The speech service requires this
+  file. See [setup steps](infra/README.md#speech-engine-gemini-remains-the-agent)
+  before deploying. Tiger credentials remain in the existing separate env file.
 
 ### 7.2 Continuous delivery
 
@@ -1015,10 +841,13 @@ back.
 | `TIGER_ADMIN_URL` | import and provisioning scripts | `tsdbadmin`, in ignored `.env.tiger-admin` only |
 | `TIGER_READER_ENV_FILE` | `db:reader` | output path, default `.env.tiger-reader` |
 | `TIGER_ENV_FILE` | Compose | overrides `/opt/reefatlas/secrets/tiger.env` |
-| `GEMINI_API_KEY` | voice routes | required for transcribe, ask and translate |
+| `GEMINI_API_KEY` | voice routes | required for streamed agent replies, ask and translate |
 | `GEMINI_MODEL` / `GEMINI_FALLBACK_MODEL` | voice routes | default `gemini-flash-latest` / `gemini-flash-lite-latest`; pin stable IDs for production |
-| `ELEVENLABS_API_KEY` | `/api/voice/speak` | required for speech |
-| `ELEVENLABS_VOICE_ID` / `ELEVENLABS_MODEL_ID` | `/api/voice/speak` | default `JBFqnCBsd6RMkjVDRZzb` ("George") / `eleven_flash_v2_5`; read on every request |
+| `ELEVENLABS_API_KEY` | Speech Engine service | server-side token creation and WebSocket authentication |
+| `ELEVENLABS_SPEECH_ENGINE_ID` | Speech Engine service | `seng_…` returned by `pnpm speech:setup` |
+| `ELEVENLABS_VOICE_ID` | `speech:setup` | default `JBFqnCBsd6RMkjVDRZzb` ("George"), with `eleven_flash_v2_5` |
+| `SPEECH_PUBLIC_WS_URL` | `speech:setup` | public `wss://…/voice-engine` endpoint |
+| `VOICE_ENV_FILE` | Compose | overrides `/opt/reefatlas/secrets/voice.env` |
 | `REEF_DATA` | voice agent | `json` (default); `tiger` is not implemented yet |
 
 Without `TIGER_DATABASE_URL` the 3D experience works fully, and `/data` shows a
@@ -1039,9 +868,10 @@ everything except the voice panel and spoken guide works. Test the production st
 | Image | CI smoke test | exact published digest under production container restrictions |
 
 At import (2026-09-26), a separate JavaScript parse of both CSVs matched all
-203,909 fields read back from Tiger Cloud. The voice agent has no automated
-tests. It is covered only by typecheck and lint, and by the argument validation
-inside its tools.
+203,909 fields read back from Tiger Cloud. `pnpm test:voice` covers streamed
+Gemini replies, tool calls and signatures, typed fallback, retry boundaries, and
+Speech Engine interruption/event IDs. Live microphone/playback verification
+requires the configured engine and public WebSocket endpoint.
 
 ## 10. Official documentation
 

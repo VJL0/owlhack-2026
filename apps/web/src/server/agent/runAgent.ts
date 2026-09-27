@@ -1,6 +1,6 @@
-import type { Content } from "@google/genai";
+import type { Content, Part } from "@google/genai";
 import type { Lang, UiAction } from "@/lib/voiceActions";
-import { generate, GEMINI_MODEL } from "@/server/gemini";
+import { generateStream, GEMINI_MODEL } from "@/server/gemini";
 import { getReefData } from "@/server/reef";
 import { isPageTool, pageToolDeclarations, toAction } from "./pageTools";
 import { runTool, toolDeclarations } from "./tools";
@@ -73,8 +73,20 @@ async function systemPrompt(ctx: AgentContext) {
 }
 
 /** Question in, spoken answer + page actions out. Gemini asks for tools; we run them and feed results back until it answers. */
+export interface AgentResult { answer: string; trace: ToolTrace[]; actions: UiAction[] }
+export type AgentEvent = { type: "text"; text: string } | { type: "result"; result: AgentResult };
+
 export async function runAgent(question: string, ctx: AgentContext) {
-  const contents: Content[] = [{ role: "user", parts: [{ text: question }] }];
+  for await (const event of streamAgent([{ role: "user", parts: [{ text: question }] }], ctx)) {
+    if (event.type === "result") return event.result;
+  }
+  throw new Error("Agent ended without a result.");
+}
+
+/** The same tool loop serves typed questions and Speech Engine transcripts. */
+export async function* streamAgent(history: Content[], ctx: AgentContext, signal?: AbortSignal): AsyncGenerator<AgentEvent, void> {
+  signal?.throwIfAborted();
+  const contents: Content[] = [...history];
   const trace: ToolTrace[] = [];
   const actions: UiAction[] = [];
   const config = {
@@ -85,18 +97,36 @@ export async function runAgent(question: string, ctx: AgentContext) {
   let model = GEMINI_MODEL;
 
   for (let turn = 0; turn < MAX_TURNS; turn++) {
-    const out = await generate({ contents, config }, model);
-    const res = out.res;
-    model = out.model;
-    const calls = res.functionCalls ?? [];
-    if (!calls.length) return { answer: res.text?.trim() || "Sorry, I could not find an answer.", trace, actions };
-
-    // Keep the model's turn as-is (it can carry thought signatures the next call needs).
-    const modelTurn = res.candidates?.[0]?.content;
-    if (modelTurn) contents.push(modelTurn);
+    signal?.throwIfAborted();
+    const parts: Part[] = [];
+    let answer = "";
+    for await (const out of generateStream({ contents, config: { ...config, abortSignal: signal } }, model)) {
+      signal?.throwIfAborted();
+      model = out.model;
+      const chunkParts = out.res.candidates?.[0]?.content?.parts ?? [];
+      // Preserve function calls and thought signatures exactly for the next model turn.
+      parts.push(...chunkParts);
+      for (const part of chunkParts) {
+        if (part.text && !part.thought) {
+          answer += part.text;
+          yield { type: "text", text: part.text };
+        }
+      }
+    }
+    const calls = parts.flatMap((p) => p.functionCall ? [p.functionCall] : []);
+    if (!calls.length) {
+      if (!answer.trim()) {
+        answer = "Sorry, I could not find an answer.";
+        yield { type: "text", text: answer };
+      }
+      yield { type: "result", result: { answer: answer.trim(), trace, actions } };
+      return;
+    }
+    contents.push({ role: "model", parts });
 
     const results = await Promise.all(
       calls.map(async (c) => {
+        signal?.throwIfAborted();
         const name = c.name ?? "";
         const args = (c.args ?? {}) as Record<string, unknown>;
         let result: unknown;
@@ -110,11 +140,15 @@ export async function runAgent(question: string, ctx: AgentContext) {
         } else {
           result = await runTool(name, args);
         }
+        signal?.throwIfAborted();
         trace.push({ name, args, result });
         return { functionResponse: { id: c.id, name, response: { result } } };
       }),
     );
     contents.push({ role: "user", parts: results });
   }
-  return { answer: "Sorry, that question needed too many steps. Try asking something narrower.", trace, actions };
+  signal?.throwIfAborted();
+  const answer = "Sorry, that question needed too many steps. Try asking something narrower.";
+  yield { type: "text", text: answer };
+  yield { type: "result", result: { answer, trace, actions } };
 }

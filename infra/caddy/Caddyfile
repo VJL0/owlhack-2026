@@ -11,7 +11,7 @@
 		Permissions-Policy "camera=(), geolocation=(), payment=(), usb=()"
 		Cross-Origin-Opener-Policy "same-origin"
 		# Next.js inlines hydration scripts; Cesium runs web workers; map tiles come from Esri and NASA GIBS.
-		Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://gibs.earthdata.nasa.gov; connect-src 'self' https://server.arcgisonline.com https://gibs.earthdata.nasa.gov; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'"
+		Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://gibs.earthdata.nasa.gov; media-src 'self' blob:; connect-src 'self' https://api.elevenlabs.io wss://api.elevenlabs.io https://*.rtc.elevenlabs.io wss://*.rtc.elevenlabs.io https://server.arcgisonline.com https://gibs.earthdata.nasa.gov; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'"
 		-Server
 	}
 
@@ -20,10 +20,18 @@
 	@cesium path /cesium/*
 	header @cesium >Cache-Control "public, max-age=604800, stale-while-revalidate=86400"
 
-	reverse_proxy web:3000 {
-		health_uri /api/health
-		health_interval 15s
-		health_timeout 3s
+	# Only expose the authenticated Speech Engine upgrade endpoint.
+	handle /voice-engine {
+		rewrite * /ws
+		reverse_proxy speech:3001
+	}
+
+	handle {
+		reverse_proxy web:3000 {
+			health_uri /api/health
+			health_interval 15s
+			health_timeout 3s
+		}
 	}
 
 	log {

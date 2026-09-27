@@ -82,13 +82,13 @@ export default function Narrator() {
     build().then((text) => {
       if (scene.current !== key) return; // viewer already moved on
       setLine(text);
-      if (useStore.getState().guide) speak(text, lang, "queue").catch(() => {});
+      if (useStore.getState().guide) speak(text).catch(() => {});
     });
   }, [key, siteId, lang]);
 
   // Turning the guide on mid-scene: say where we are right away.
   const sayCurrent = useEffectEvent(() => {
-    if (line) speak(line, lang, "queue").catch(() => {});
+    if (line) speak(line).catch(() => {});
   });
   useEffect(() => {
     if (guide) sayCurrent();
