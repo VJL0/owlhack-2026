@@ -5,15 +5,17 @@ storms and fishing overlap in between. Reef Atlas reconstructs what happened
 between surveys at four places with long public records: Moorea (French
 Polynesia), Lizard Island (Great Barrier Reef), Soneva Fushi (Maldives, real 3D
 photogrammetry) and Florida's Coral Reef. It has a voice guide you can talk to,
-and a public archive of global reef bleaching data served from Tiger Cloud
-(TigerData). Built for OwlHacks 2026.
+and a public archive of global reef heat and bleaching data. Every dataset the
+app shows lives in PostgreSQL on Tiger Cloud (TigerData); the repository holds no
+JSON or CSV copies. Built for OwlHacks 2026.
 
 - Live experience: <https://reefatlas.us>
 - Reef data explorer: <https://reefatlas.us/data>
 - Data API: <https://reefatlas.us/api/reef-data?dataset=risk&year=2023>
 
 The viewer starts on the night side of the Earth and pulls back to the whole
-globe, where 2,720 reefs are coloured by their heat stress and four flagship
+globe, where 2,720 reefs are coloured by their peak heat stress for any year
+from 1985 to 2025, or by a model forecast for 2027–2031, and four flagship
 reefs are marked. Each flagship opens an evidence dossier: an evidence timeline
 of field surveys, reef sensors, satellite heat stress, cyclone tracks and the
 monitoring program's own attributions, with every stretch nobody observed shown
@@ -25,8 +27,8 @@ the reef tract and a dive beneath one of nine reef sites, where heat stress,
 fishing activity, invasive lionfish and hurricanes drive the underwater scene. Press `V` to ask the reef a question by voice or text,
 in English or Spanish. A Gemini agent answers only from the reef data, and can
 move the page ("take me to Moorea", "take me to Looe Key", "go to August 2023"). ElevenLabs speaks
-the answer. A separate server-rendered explorer pages through 18,539 records for
-2,720 reefs worldwide, stored in PostgreSQL on Tiger Cloud.
+the answer. A separate server-rendered explorer pages through 137,764 records for
+2,720 reefs worldwide.
 
 ## Contents
 
@@ -57,26 +59,33 @@ accessed) is in [`docs/data-inventory.md`](docs/data-inventory.md).
 
 | Layer | Source | Kind | Where it lives |
 | --- | --- | --- | --- |
-| Moorea coral, macroalgae, fish, crown-of-thorns starfish (2005–2025), reef thermistors (2005–2024), 49-sensor lagoon network (2021–2025), 2019 bleaching colony segmentation | Moorea Coral Reef LTER data packages on EDI (knb-lter-mcr.4, .6, .1039, .1035, .1045, .5050) | field / sensor | `data/raw/mcr`, `src/data/flagships/moorea*.json` |
-| Lizard Island coral cover, starfish, juvenile corals (1985–2026) and disturbance attributions | AIMS Long-Term Monitoring Program (doi:10.25845/5c09bc4ff315c) | field / reported | `data/raw/aims`, `src/data/flagships/lizard-island.json` |
-| Soneva Fushi 3D surveys: 23 surveys, 6 plots, Gaussian splats | wildflow/soneva-corals (Hugging Face, CC BY 4.0), 2 plots converted to SPZ | field (3D) | `public/splats/soneva`, `src/data/flagships/soneva-*.json` |
-| Heat stress at the flagships (weekly, 2002–2026) | NOAA Coral Reef Watch 5 km v3.1 via NOAA CoastWatch ERDDAP | satellite | `data/raw/crw/weekly-*.csv` |
-| On-reef heat stress at Moorea | NOAA's DHW method applied to the 10 m thermistor | derived | `src/data/flagships/moorea.json` |
-| Cyclones near the flagships (1985–2026) | NOAA NCEI IBTrACS v04r01 | track | `data/raw/ibtracs` |
-| Surface change vs. noise floor, Soneva plots | height comparison of co-registered splats | derived | `src/data/flagships/soneva-change.json` |
-| Degree Heating Weeks, SST, SST anomaly, alert level (9 sites, weekly, 2016–2024) | NOAA Coral Reef Watch 5 km v3.1 via PacIOOS ERDDAP | observed | `src/data/thermal.json` |
-| Hurricane tracks and closest approach per site | NOAA NHC HURDAT2 (2025 release) | observed / derived | `src/data/storms.json` |
-| Lionfish records within 25 km | USGS Nonindigenous Aquatic Species | observed | `src/data/lionfish.json` |
+| Moorea coral, macroalgae, fish, crown-of-thorns starfish (2005–2025), reef thermistors (2005–2024), 49-sensor lagoon network (2021–2025), 2019 bleaching colony segmentation | Moorea Coral Reef LTER data packages on EDI (knb-lter-mcr.4, .6, .1039, .1035, .1045, .5050) | field / sensor | raw: `data/raw/mcr`; app: Tiger `atlas_documents` (`flagship/moorea`, `moorea/lagoon`, `moorea/bleaching2019`) |
+| Lizard Island coral cover, starfish, juvenile corals (1985–2026) and disturbance attributions | AIMS Long-Term Monitoring Program (doi:10.25845/5c09bc4ff315c) | field / reported | raw: `data/raw/aims`; app: Tiger `atlas_documents` (`flagship/lizard-island`) |
+| Soneva Fushi 3D surveys: 23 surveys, 6 plots, Gaussian splats | wildflow/soneva-corals (Hugging Face, CC BY 4.0), 2 plots converted to SPZ | field (3D) | `public/splats/soneva`; manifest in Tiger `atlas_documents` (`soneva/splats`) |
+| Heat stress at the flagships (weekly, 2002–2026) | NOAA Coral Reef Watch 5 km v3.1 via NOAA CoastWatch ERDDAP | satellite | raw: `data/raw/crw/weekly-*.csv`; app: inside the flagship dossiers |
+| On-reef heat stress at Moorea | NOAA's DHW method applied to the 10 m thermistor | derived | Tiger `atlas_documents` (`flagship/moorea`) |
+| Cyclones near the flagships (1985–2026) | NOAA NCEI IBTrACS v04r01 | track | raw: `data/raw/ibtracs`; app: inside the flagship dossiers |
+| Surface change vs. noise floor, Soneva plots | height comparison of co-registered splats | derived | Tiger `atlas_documents` (`soneva/change`) |
+| Degree Heating Weeks, SST, SST anomaly, alert level (9 sites, weekly, 2016–2024) | NOAA Coral Reef Watch 5 km v3.1 via PacIOOS ERDDAP | observed | Tiger `florida_thermal` |
+| Hurricane tracks and closest approach per site | NOAA NHC HURDAT2 (2025 release) | observed / derived | Tiger `storms`, `storm_fixes`, `storm_site_passes` |
+| Lionfish records and distance to each site | USGS Nonindigenous Aquatic Species | observed / derived | Tiger `lionfish_records`, `lionfish_site_distances` |
 | Sea-temperature anomaly map (from 2019-07-23) | NASA JPL MUR via NASA GIBS | observed | fetched live as map tiles |
-| Bleaching risk 2021–2025, 2,720 reefs | `bleaching_risk_2021_2025.csv` (supplied model output) | model | Tiger Cloud `reef_data` |
-| Reef surveys with 365-day heat-stress windows, 2013–2020 | `reef_stress_analysis.csv` (supplied) | observed / derived, as supplied | Tiger Cloud `reef_data` |
-| AIS fishing, vessel presence, SAR detections | Seeded simulation shaped by real seasons | simulated | `src/data/simulated.json` |
+| Peak heat stress per reef and year, 1985–2025 (no 2003 rows), 2,649 reefs | `heat_history_1985_2025.csv` (supplied; each value labelled observed or estimated) | observed / estimated, as supplied | Tiger `heat_history` |
+| Peak heat stress forecast 2027–2031 with 10th–90th percentiles and P(DHW ≥ 4, ≥ 8) | `heat_forecast_2027_2031.csv` (supplied ridge-model output) | model | Tiger `heat_forecast` |
+| Back-tested forecast skill by horizon (ridge, XGBoost, two baselines) | `heat_forecast_validation.csv` (supplied) | model evaluation | Tiger `heat_forecast_validation` |
+| Bleaching risk 2021–2025, 2,720 reefs | `bleaching_risk_2021_2025.csv` (supplied model output) | model | Tiger `bleaching_risk` |
+| Reef surveys with 365-day heat-stress windows, 2013–2020 | `reef_stress_analysis.csv` (supplied) | observed / derived, as supplied | Tiger `reef_stress` |
+| AIS fishing, vessel presence, SAR detections | Seeded simulation shaped by real seasons | simulated | Tiger `florida_simulated_activity` |
 | Bleaching probability and its explanation in the 3D scene | Demo logistic model with hand-set weights and exact Shapley values | model (demo) | `src/lib/model.ts` |
-| Voice agent answers | Gemini, restricted to tool results over the bundled JSON above (`REEF_DATA=json`) | same as the data it cites | `src/server/agent` |
+| Voice agent answers | Gemini, restricted to tool results; the tools run SQL on Tiger | same as the data it cites | `src/server/agent`, `src/server/reef/tigerReefData.ts` |
 
-The Tiger datasets include 740 reefs in the Florida Keys, but they use their own
-reef IDs and are **not** joined to the nine demonstration sites. The voice agent
-does not read Tiger yet: `REEF_DATA=tiger` is declared but not implemented.
+All Tiger tables are in schema `reef_data`. The supplied CSVs and the former
+`src/data/*.json` files were deleted from the repository only after Tiger was shown
+to rebuild each of them byte for byte (section 6). The raw upstream downloads in
+`data/raw` stay in Git as the pipeline's inputs.
+
+The heat and bleaching datasets include 740 reefs in the Florida Keys, but they use
+their own reef IDs and are **not** joined to the nine demonstration sites.
 
 ## 2. System architecture
 
@@ -104,7 +113,7 @@ flowchart LR
     end
 
     subgraph Tiger["Tiger Cloud, AWS us-east-1"]
-        PG[("PostgreSQL 18.6 + TimescaleDB 2.30.1<br/>schema reef_data")]
+        PG[("PostgreSQL 18.6 + TimescaleDB 2.30.1<br/>schema reef_data: every dataset")]
     end
 
     subgraph AI["AI services"]
@@ -133,20 +142,24 @@ flowchart LR
     Voice <-->|"WebRTC"| Eleven
     Eleven <-->|"authenticated public WebSocket"| Caddy
     Speech -->|"streaming @google/genai"| Gemini
+    Speech -->|"agent data tools, role reef_atlas_reader"| PG
     GHA -->|"push"| GHCR
     GHA -->|"SSH deploy key"| Vultr
     Vultr -->|"docker pull"| GHCR
 ```
 
 The browser uses our origin for app data and ElevenLabs for WebRTC audio. Caddy terminates TLS, adds the security
-headers, compresses responses, and proxies to the Next.js server. Most of the
-experience is static: the observed Florida datasets are baked into JSON at build
-time and ship with the client bundle, so the 3D experience needs only the map
-tiles from the network.
+headers, compresses responses, and proxies to the Next.js server. The page shell
+and scripts are static. All data comes from Tiger at request time through small
+JSON routes: the Florida bundle is preloaded in the page head and fetched once
+before the experience starts, flagship documents load when opened, and the world
+heat layer loads one year at a time. Each server process keeps a read for five
+minutes, and browsers may keep a response for 60 seconds.
 
-Three kinds of request reach the server:
+Four kinds of request reach the server:
 
-- `/data` and `/api/reef-data` query Tiger as a read-only database role.
+- `/api/atlas/*` (Florida bundle, flagship documents, world reef index, heat by
+  year), `/data` and `/api/reef-data` query Tiger as a read-only database role.
 - `/api/voice/*` calls Gemini and ElevenLabs with API keys held only on the
   server.
 - `/api/health` is the liveness probe.
@@ -160,8 +173,9 @@ ElevenLabs API and WebRTC hosts.
 ```text
 apps/web/                      Next.js 16 app (the only deployable)
   src/app/
-    page.tsx                   the 3D experience (client component tree)
+    page.tsx                   the 3D experience, held by FloridaGate until its data arrives
     data/page.tsx              /data explorer (server component, reads Tiger)
+    api/atlas/                 florida, documents/[group]/[name], world, heat (read Tiger)
     api/reef-data/route.ts     GET /api/reef-data (route handler, reads Tiger)
     api/voice/                 ask, session, translate (Gemini, Speech Engine)
     api/health/route.ts        liveness probe for Docker and Caddy
@@ -170,24 +184,24 @@ apps/web/                      Next.js 16 app (the only deployable)
   src/features/atlas/          world view, flagship dossier, evidence timeline, side cards
   src/features/splat/          Soneva 3D surveys (Spark Gaussian splats in React Three Fiber)
   src/features/voice/          VoiceAgent + React SDK, Narrator, narration bridge, i18n
-  src/lib/                     data access, time, demo model, store, narrative,
+  src/lib/                     data access (Florida data filled from /api/atlas/florida), atlasClient
+                               (browser reads of /api/atlas), time, demo model, store, narrative,
                                navigation (page moves), voiceActions (UiAction types)
-  src/lib/server/              server-only: pg pool and dataset queries
+  src/lib/server/              server-only: pg pool, atlas and dataset queries
   src/server/                  server-side (imported only by route handlers): Gemini
                                client, agent loop and tools, ReefData interface and
-                               its JSON implementation
-  src/data/                    generated JSON (committed; built from data/raw)
-  src/data/flagships/          flagship dossiers, Moorea lagoon and 2019 plots, Soneva splat manifest
-  database/                    SQL migration, dataset allowlist, filters, tests, docs
-  scripts/                     copy-cesium, build-data, import-tiger, provision-tiger-reader,
-                               fetch-flagships, prepare-splats, analyze-soneva, build-flagships
+                               its Tiger (SQL) implementation
+  database/                    SQL migrations 001–003, dataset allowlist, atlas read/load code,
+                               CSV rebuilder, filters, tests, docs
+  scripts/                     copy-cesium, build-data, import-tiger, import-atlas,
+                               provision-tiger-reader, fetch-flagships, prepare-splats,
+                               analyze-soneva, build-flagships
   public/splats/soneva/        SPZ files for two Soneva plots, four dates each
   Dockerfile                   multi-stage standalone image, non-root runtime
 data/raw/                      raw NOAA CRW CSVs, HURDAT2, USGS lionfish JSON; flagship sources
                                (mcr, aims, soneva, ibtracs, crw weekly) with SHA-256 in sources.json
+data/build/atlas/              pipeline output loaded into Tiger by `pnpm db:atlas` (ignored by Git)
 docs/data-inventory.md         verified inventory of every flagship data source
-bleaching_risk_2021_2025.csv   source dataset (never edited; hash pinned)
-reef_stress_analysis.csv       source dataset (never edited; hash pinned)
 infra/                         compose.yaml, Caddyfile, release scripts, tests
 .github/workflows/deploy.yml   build, smoke test and deploy on push to main
 ```
@@ -304,6 +318,7 @@ classDiagram
     }
     class DataModule {
         <<module src/lib/data.ts>>
+        +loadFloridaData() from /api/atlas/florida
         +SITES Site[]
         +thermalAt(siteId, t) ThermalState
         +stormExposure(siteId, t) StormExposure
@@ -351,6 +366,12 @@ previous 365 days, and finds the strongest storm within 150 km. It mirrors one
 row of the planned `reef_feature_snapshots` table, so a real backend can replace
 it without touching the UI.
 
+The functions stay synchronous. `FloridaGate` holds the experience until
+`/api/atlas/florida` has answered (the page head preloads it, and Cesium starts
+loading at the same time), then `setFloridaData` fills the module's live exports.
+If Tiger cannot be reached the page shows "Reef data is temporarily unavailable"
+with a retry button, instead of any fallback data.
+
 ### 4.4 Offline data pipeline
 
 ```mermaid
@@ -358,14 +379,18 @@ flowchart LR
     CRW["data/raw/crw/*.csv<br/>ERDDAP dhw_5km, weekly stride"] --> Build
     HUR["data/raw/hurdat2/*.txt<br/>HURDAT2 best track"] --> Build
     NAS["data/raw/nas/*.json<br/>USGS NAS Pterois"] --> Build
-    Build["scripts/build-data.mjs<br/>pnpm data"] --> JSON["src/data/*.json<br/>thermal, storms, lionfish,<br/>sites, simulated, meta"]
-    JSON --> Bundle["client bundle"]
-    Bundle --> Snap["snapshot()"] --> Predict["predict()"] --> HUD["HUD, constellation,<br/>timeline, reef visuals"]
+    Build["scripts/build-data.mjs<br/>pnpm data"] --> Stage["data/build/atlas/*.json<br/>(ignored by Git)"]
+    Flag["scripts/build-flagships.mjs<br/>pnpm data:flagships"] --> Stage
+    Stage --> Load["scripts/import-atlas.mjs<br/>pnpm db:atlas"] --> Tiger[("Tiger reef_data<br/>florida_*, storm_*, lionfish_*,<br/>atlas_documents")]
+    Tiger --> API["/api/atlas/florida"] --> Snap["snapshot()"] --> Predict["predict()"] --> HUD["HUD, constellation,<br/>timeline, reef visuals"]
 ```
 
 `build-data.mjs` computes haversine distances from each site to every
 hurricane fix and lionfish record. It seeds the simulated AIS series so the demo
 is deterministic, and writes `meta.json` with the provenance of each source.
+The build output is only a staging area: `pnpm db:atlas` loads it into Tiger in one
+transaction, reads every dataset back through the app's own read code, and
+refuses to commit unless the read-back is identical to what it loaded.
 
 ### 4.5 Demo bleaching model
 
@@ -436,7 +461,7 @@ Setup, public WebSocket routing, secrets and live verification steps are in
 | `get_lionfish_near(site_id, from, to, radius_km = 25)` | data | USGS NAS, observed | count, first and latest date, nearest distance, count per year |
 | `get_activity(site_id, from, to)` | data | **simulated** AIS / SAR | fishing hours, vessel hours, SAR detections, unmatched SAR |
 | `compare_sites(metric, from, to)` | data | any of the above | all nine sites ranked by `max_dhw`, `weeks_dhw_at_least_4`, `lionfish_sightings`, `storm_passes` or `fishing_hours` |
-| `get_flagship_evidence(flagship_id, from_year?, to_year?)` | data | flagship dossiers (field, sensor, satellite, track, reported, derived) | survey values with dates, heat peaks, cyclones, reported causes, declines with what co-occurred, gaps, what is missing |
+| `get_flagship_evidence(flagship_id, from_year?, to_year?)` | data | flagship dossiers in Tiger (field, sensor, satellite, track, reported, derived) | survey values with dates, heat peaks, cyclones, reported causes, declines with what co-occurred, gaps, what is missing |
 | `go_to_flagship(flagship_id)` / `go_to_world()` | page | – | open Moorea, Lizard Island, Soneva Fushi or Florida; pull back to the globe |
 | `set_flagship_date(date)` | page | – | move the dossier's evidence timeline cursor |
 | `go_to_reef(site_id)` | page | – | dive to one of the nine sites |
@@ -464,8 +489,26 @@ and rate limiting. Model overrides remain `GEMINI_MODEL` and `GEMINI_FALLBACK_MO
 ## 6. TigerData layer
 
 Tiger Cloud service `db-49612` (PostgreSQL 18.6, TimescaleDB 2.30.1, AWS
-us-east-1) stores the two supplied CSVs in schema `reef_data`. Full rationale,
-role setup, and runbook: [`apps/web/database/README.md`](apps/web/database/README.md).
+us-east-1) holds every dataset the app shows, in schema `reef_data`: the five
+supplied CSVs (migrations 001 and 002) and the Florida and flagship data that used
+to ship as JSON (migration 003). Full rationale, role setup, and runbook:
+[`apps/web/database/README.md`](apps/web/database/README.md).
+
+### 6.0 How the move was confirmed
+
+Before any file was deleted, Tiger had to reproduce it exactly, and it did
+(2026-09-27):
+
+| Data | Rows | Check | Result |
+| --- | ---: | --- | --- |
+| 5 supplied CSVs | 137,764 | rebuilt from their views (pandas formatting, CRLF) | SHA-256 identical to the reviewed files |
+| 6 Florida datasets (sites, weekly heat, storms, lionfish, simulated activity, sources) | 8,401 | rebuilt from relational tables by the app's own read code | SHA-256 identical to the former `src/data/*.json` |
+| 7 flagship documents | 7 | stored as `json` (exact text) | SHA-256 identical to the former `src/data/flagships/*.json` |
+| `global-reefs.json` (derived from two CSVs) | 2,720 | rebuilt from Tiger with the old build algorithm | identical; the world layer now queries Tiger instead |
+| Voice agent tools | 649 calls | old JSON implementation vs new SQL implementation, 9 sites × 9 date ranges × every tool | 649 of 649 identical |
+
+`pnpm db:verify` repeats the first three checks from the database alone at any
+time, and `pnpm db:export <dir>` writes every CSV back out byte for byte.
 
 ### 6.1 Schema
 
@@ -473,6 +516,16 @@ role setup, and runbook: [`apps/web/database/README.md`](apps/web/database/READM
 erDiagram
     reefs ||--o{ bleaching_risk : "risk per year"
     reefs ||--o{ reef_stress : "surveys"
+    reefs ||--o{ heat_history : "peak DHW per year"
+    reefs ||--o{ heat_forecast : "forecast per year"
+    heat_forecast_validation ||--o{ heat_forecast : "skill of (model, horizon)"
+    florida_sites ||--o{ florida_thermal : "weekly CRW"
+    florida_sites ||--o{ storm_site_passes : "closest approach"
+    storms ||--o{ storm_fixes : "best track"
+    storms ||--o{ storm_site_passes : ""
+    lionfish_records ||--o{ lionfish_site_distances : ""
+    florida_sites ||--o{ lionfish_site_distances : ""
+    florida_sites ||--o{ florida_simulated_activity : "SIMULATED"
 
     reefs {
         integer reef_id PK "source reef ID, > 0"
@@ -484,7 +537,6 @@ erDiagram
         integer reef_id FK "UNIQUE with year"
         integer year "2021 to 2025"
         float8 peak_dhw ">= 0"
-        float8 max_sst_anomaly
         float8 p_significant_bleaching "0 to 1, model output"
         text risk_band "none, watch, significant, severe"
         boolean beyond_training_dhw
@@ -496,48 +548,100 @@ erDiagram
         date window_start
         date window_end ">= window_start"
         float8 hard_coral_cover_pct "0 to 100, nullable"
-        float8 percent_bleaching "0 to 100, nullable"
-        float8 depth_m "nullable"
-        float8 max_dhw_30d
-        float8 max_dhw_90d
         float8 max_dhw
-        float8 mean_sst_anomaly
-        float8 max_sst_anomaly
         integer days_bleaching_alert
-        boolean noaa_pixel_offset
     }
-    imports {
-        text file_name PK "one row per source CSV"
-        text sha256 "64 hex chars"
-        integer row_count
-        timestamptz imported_at
+    heat_history {
+        integer source_row PK
+        integer reef_id FK "UNIQUE with year"
+        text ocean "as supplied, per row"
+        integer year "1985 to 2025, no 2003"
+        float8 peak_dhw ">= 0"
+        text peak_dhw_source "observed or estimated"
     }
-    schema_migrations {
-        integer version PK
-        text sha256 "checksum of the applied SQL"
-        timestamptz applied_at
+    heat_forecast {
+        integer source_row PK
+        integer reef_id FK "UNIQUE with year"
+        integer year "2027 to 2031"
+        integer horizon "= year - 2026"
+        float8 forecast_peak_dhw "between p10 and p90"
+        float8 peak_dhw_p10
+        float8 peak_dhw_p90
+        float8 p_dhw_over_8 "<= p_dhw_over_4"
+        text model FK "with horizon"
+    }
+    heat_forecast_validation {
+        integer source_row PK
+        text model "UNIQUE with horizon"
+        integer horizon "1 to 5"
+        float8 mae_dhw
+        float8 auc_dhw8
+    }
+    florida_sites {
+        text site_id PK
+        integer tract_order "UNIQUE"
+        float8 crw_latitude "5 km pixel centre"
+    }
+    florida_thermal {
+        text site_id PK
+        timestamptz sampled_at PK "weekly, 12:00 UTC"
+        float8 dhw
+        integer baa "0 to 4"
+    }
+    storms {
+        text storm_id PK "HURDAT2 ALnnYYYY"
+        integer peak_wind_kt
+    }
+    storm_fixes {
+        text storm_id PK
+        timestamptz observed_at PK
+        text status "HURDAT2 status"
+    }
+    lionfish_records {
+        integer nas_key PK "USGS NAS key"
+        integer source_row "UNIQUE, listing order"
+        date observed_on
+    }
+    atlas_documents {
+        text doc_id PK "e.g. flagship/moorea"
+        json body "exact text, key order kept"
     }
 ```
 
 | Table | Rows | Notes |
 | --- | ---: | --- |
-| `reefs` | 2,720 | Both files repeat identical coordinates per reef, so they are stored once (3NF). |
+| `reefs` | 2,720 | Every file repeats identical coordinates per reef, so they are stored once (3NF). The importer fails if two files ever disagree. |
 | `bleaching_risk` | 13,245 | One row per reef and year. Indexed on `(reef_id, year)` (unique) and `(year, reef_id, source_row)`. |
 | `reef_stress` | 5,294 | 528 reef/year keys repeat (several surveys), so `source_row` is the key. Indexed both ways for filters and paging. |
-| `imports`, `schema_migrations` | 2, 1 | SHA-256 and row count of each imported file, and the checksum of the applied migration. Reruns check these instead of reloading. |
+| `heat_history` | 105,960 | One row per reef and year, 1985–2025. The supplied file has no 2003 rows. 2021–2025 equal `bleaching_risk.peak_dhw`. `ocean` stays per row because the two heat files label reef 1000056 differently (Indian vs Pacific). |
+| `heat_forecast` | 13,245 | Ridge-model forecast, horizon 1–5. CHECKs enforce p10 ≤ median ≤ p90, forecast within p10–p90, P(≥8) ≤ P(≥4), horizon = year − 2026; a foreign key requires back-test skill for its model and horizon. |
+| `heat_forecast_validation` | 20 | Four models (ridge, XGBoost, two baselines) × five horizons. |
+| `florida_sites`, `florida_thermal` | 9, 4,221 | The nine reef-tract sites and their weekly NOAA CRW samples, 2016–2024. |
+| `storms`, `storm_fixes`, `storm_site_passes` | 29, 855, 261 | HURDAT2 tracks near the tract and each storm's closest approach to each site. |
+| `lionfish_records`, `lionfish_site_distances` | 205, 1,845 | USGS NAS records and their distance to each site. |
+| `florida_simulated_activity`, `florida_sources` | 972, 4 | The simulated AIS/SAR placeholder (commented as such) and the layer sources. |
+| `atlas_documents` | 7 | Flagship dossiers, Moorea lagoon and 2019 plots, Soneva splat manifest and change analysis. |
+| `imports`, `atlas_imports`, `schema_migrations` | 5, 13, 3 | SHA-256 of each loaded dataset and of each applied migration. |
 
-Two views, `bleaching_risk_records` and `reef_stress_records`, join the
-coordinates back and return exactly the CSV columns in CSV order. The app reads
-the views, and verification compares them with the source files.
+Source-shaped views (`*_records`) join the coordinates back and return exactly
+the CSV columns in CSV order. The explorer reads them, and verification rebuilds
+the CSVs from them.
+
+**Why `json` for the flagship documents.** They are assembled documents
+(narrative, lanes, events, drivers) that one screen reads whole, and their key
+order sets on-screen order. Tiger's `design-postgres-tables` guidance prefers
+`jsonb` but names `json` for exactly this case ("ONLY use JSON if the original
+ordering of the contents MUST be preserved"). The Florida data, which the agent
+queries, is relational.
 
 **Why ordinary tables and not hypertables.** Tiger's hypertable guidance targets
 insert-heavy time series ("Large volumes (1M+ rows), time-based queries,
 infrequent updates"). Columnstore needs more than 100 rows per `segmentby` value
-per chunk. These are about 18.5k static annual rows with one row per reef per
-year, so chunking would add overhead without benefit. Types follow Tiger's
+per chunk. The largest table here has about 106k static annual rows, one per reef
+per year, so chunking would add overhead without benefit. Types follow Tiger's
 `design-postgres-tables` guidance: `double precision` for measured floats,
-`date` for survey windows, `boolean NOT NULL` for flags, `text` + `CHECK` for
-the risk band.
+`timestamptz` for instants, `date` for days, `boolean NOT NULL` for flags,
+`text` + `CHECK` for bands and statuses.
 
 ### 6.2 Access control
 
@@ -599,9 +703,17 @@ sequenceDiagram
     end
 ```
 
-Reruns are idempotent: they verify and add nothing. `pnpm db:verify` runs the
-same comparison without writing. The whole import is one transaction, so a
-partial load is impossible.
+After the staged comparison, every run (including reruns and `pnpm db:verify`)
+rebuilds each CSV from its view in pandas' format and compares the SHA-256 with
+the pinned hash of the reviewed file, so verification no longer needs the files.
+Reruns are idempotent: they verify and add nothing. The whole import is one
+transaction, so a partial load is impossible.
+
+The atlas data follows the same rules through `scripts/import-atlas.mjs`
+(`pnpm db:atlas`): it replaces the Florida bundle and the documents in one
+transaction, reads each dataset back through `database/atlas.mjs` (the code the
+API serves it with), requires the read-back to equal the input exactly, and
+records its SHA-256 in `atlas_imports`.
 
 ### 6.4 Request path
 
@@ -706,14 +818,23 @@ classDiagram
 
 | Parameter | Values | Default |
 | --- | --- | --- |
-| `dataset` | `risk` (2021–2025) or `stress` (2013–2020) | `risk` |
-| `year` | integer within the dataset's period | all years |
-| `reef` | positive integer reef ID | all reefs |
-| `page` | 1–1000, 50 rows per page | 1 |
+| `dataset` | `risk` (2021–2025), `stress` (2013–2020), `history` (1985–2025), `forecast` (2027–2031) or `validation` | `risk` |
+| `year` | integer within the dataset's period (not accepted for `validation`) | all years |
+| `reef` | positive integer reef ID (not accepted for `validation`) | all reefs |
+| `page` | 1 to the dataset's last page, 50 rows per page | 1 |
 
-Response: `{ dataset, year, reef, page, pageSize, total, reefs, columns, rows[], source: { file_name, sha256, row_count, imported_at } }`.
+Response: `{ dataset, year, reef, page, pageSize, total, reefs, label, years, hasReefs, columns, rows[], source: { file_name, sha256, row_count, imported_at } }`.
 Rows are JSON numbers, booleans, `null` for missing values, and ISO
 `YYYY-MM-DD` strings for dates.
+
+App data routes (all read Tiger; 503 with `Retry-After: 30` and no details when it is unreachable):
+
+| Route | Returns |
+| --- | --- |
+| `GET /api/atlas/florida` | the Florida bundle: `sites`, `thermal`, `storms`, `lionfish`, `simulated`, `meta` |
+| `GET /api/atlas/documents/{group}/{name}` | one flagship document as stored, e.g. `flagship/moorea`, `moorea/lagoon`, `soneva/splats`; 404 for any other id |
+| `GET /api/atlas/world` | every reef (id, coordinates, latest survey year, survey count) and the years each heat dataset covers |
+| `GET /api/atlas/heat?year=YYYY` | peak DHW for every reef in one year (1985–2031) with the year's summary; forecast years add p10/p90, P(DHW ≥ 8) and back-tested skill beside the ten-year baseline; 404 for 2003 and 2026, which the data does not cover |
 
 ## 7. Deployment
 
@@ -755,9 +876,12 @@ flowchart TB
   permissions policies. It caches `/cesium/*` for a week and redirects `www`
   to the apex domain. The Permissions-Policy disables camera, geolocation,
   payment and USB, but not the microphone the voice panel needs.
-- **Secret file is optional.** If `tiger.env` is missing the demo still boots,
-  and the dataset routes return 503. A database outage never fails the
-  container health check, so it cannot cause a restart loop.
+- **Secret file is optional for the container, not for the content.** If
+  `tiger.env` is missing the server still boots and the page shell loads, but
+  every data route returns 503 and the experience shows "Reef data is temporarily
+  unavailable" with a retry button. A database outage never fails the container
+  health check, so it cannot cause a restart loop. The `speech` container loads the
+  same file for the agent's data tools.
 - **Voice keys in production.** Compose reads
   `/opt/reefatlas/secrets/voice.env` (or `VOICE_ENV_FILE`) for Gemini and ElevenLabs
   credentials and `ELEVENLABS_SPEECH_ENGINE_ID`. The speech service requires this
@@ -824,13 +948,16 @@ back.
 | --- | --- |
 | `pnpm build` / `pnpm start` | production build and server |
 | `pnpm typecheck` / `pnpm lint` | TypeScript and ESLint |
-| `pnpm data` | rebuild the Florida `src/data/*.json` from `data/raw` |
+| `pnpm data` | rebuild the Florida bundle from `data/raw` into `data/build/atlas` |
 | `pnpm data:fetch` | download the flagship sources into `data/raw` (large files reduced on the fly, big downloads cached in ignored `data/cache`) |
 | `pnpm data:splats` | convert the Soneva splat PLYs to SPZ and measure change against the noise floor |
-| `pnpm data:flagships` | rebuild `src/data/flagships/*.json` and `src/data/global-reefs.json` |
-| `pnpm test:db` | unit tests for connection policy and filters |
-| `pnpm db:validate` | check both CSV hashes (no database access) |
-| `pnpm db:import` / `pnpm db:verify` | import into Tiger, or verify without writing |
+| `pnpm data:flagships` | rebuild the flagship dossiers into `data/build/atlas/flagships` |
+| `pnpm test:db` | unit tests for connection policy, filters and the CSV float format |
+| `pnpm db:validate` | check any supplied CSVs present against their pinned hashes (no database access) |
+| `pnpm db:import` | apply migrations and import the supplied CSVs into Tiger (needs the files only for a first import) |
+| `pnpm db:atlas` | load `data/build/atlas` (or `-- --from <dir>`) into Tiger and verify the read-back |
+| `pnpm db:verify` | read-only: rebuild every CSV and atlas dataset from Tiger and compare SHA-256 |
+| `pnpm db:export <dir>` | write the five supplied CSVs back out of Tiger, byte for byte |
 | `pnpm db:reader` | create `reef_atlas_reader` once and write its env file |
 
 | Variable | Used by | Notes |
@@ -848,10 +975,10 @@ back.
 | `ELEVENLABS_VOICE_ID` | `speech:setup` | default `JBFqnCBsd6RMkjVDRZzb` ("George"), with `eleven_flash_v2_5` |
 | `SPEECH_PUBLIC_WS_URL` | `speech:setup` | public `wss://…/voice-engine` endpoint |
 | `VOICE_ENV_FILE` | Compose | overrides `/opt/reefatlas/secrets/voice.env` |
-| `REEF_DATA` | voice agent | `json` (default); `tiger` is not implemented yet |
 
-Without `TIGER_DATABASE_URL` the 3D experience works fully, and `/data` shows a
-"temporarily unavailable" message. Without the Gemini and ElevenLabs keys,
+Without `TIGER_DATABASE_URL` the page shell loads but the experience, `/data` and
+the voice agent's data tools report that reef data is temporarily unavailable:
+there is no local copy to fall back on. Without the Gemini and ElevenLabs keys,
 everything except the voice panel and spoken guide works. Test the production stack locally with
 `docker compose -f infra/compose.yaml -f infra/compose.local.yaml up --build`
 (serves <http://localhost:8080>).
@@ -861,14 +988,16 @@ everything except the voice panel and spoken guide works. Test the production st
 | Check | Command | Covers |
 | --- | --- | --- |
 | Release recovery | `python3 infra/tests/test_release.py` | promotion, rollback, and first-release paths of `release.sh` |
-| Database policy | `pnpm test:db` | TLS cannot be weakened by URL, pool bounds, filter injection, and range rejection |
-| Source integrity | `pnpm db:validate` | pinned SHA-256 of both CSVs |
-| Database contents | `pnpm db:verify` | every row compared with the CSVs in both directions (`EXCEPT ALL`) |
+| Database policy | `pnpm test:db` | TLS cannot be weakened by URL, pool bounds, filter injection, range rejection, Python float formatting |
+| Source integrity | `pnpm db:validate` | pinned SHA-256 of any supplied CSV present locally |
+| Database contents | `pnpm db:verify` | the five CSVs and 13 atlas datasets rebuilt from Tiger, SHA-256 compared with the pinned and recorded hashes |
+| Voice agent | `pnpm test:voice` | tool loop, streaming, abort and retry; reads Tiger through `.env.local` |
 | Types and lint | `pnpm typecheck`, `pnpm lint` | whole app |
 | Image | CI smoke test | exact published digest under production container restrictions |
 
-At import (2026-09-26), a separate JavaScript parse of both CSVs matched all
-203,909 fields read back from Tiger Cloud. `pnpm test:voice` covers streamed
+At import (2026-09-26), a separate JavaScript parse of the first two CSVs matched
+all 203,909 fields read back from Tiger Cloud. The 2026-09-27 move is described in
+section 6.0. `pnpm test:voice` covers streamed
 Gemini replies, tool calls and signatures, typed fallback, retry boundaries, and
 Speech Engine interruption/event IDs. Live microphone/playback verification
 requires the configured engine and public WebSocket endpoint.

@@ -16,13 +16,15 @@
     "data:flagships": "node scripts/build-flagships.mjs",
     "db:validate": "node scripts/import-tiger.mjs --validate-only",
     "db:import": "node --env-file=.env.tiger-admin scripts/import-tiger.mjs",
-    "db:verify": "node --env-file=.env.tiger-admin scripts/import-tiger.mjs --verify-only",
+    "db:atlas": "node --env-file=.env.tiger-admin scripts/import-atlas.mjs",
+    "db:verify": "node --env-file=.env.tiger-admin scripts/import-tiger.mjs --verify-only && node --env-file=.env.tiger-admin scripts/import-atlas.mjs --verify-only",
+    "db:export": "node --env-file=.env.tiger-admin scripts/import-tiger.mjs --verify-only --export",
     "test:db": "node --test database/*.test.mjs",
     "db:reader": "node --env-file=.env.tiger-admin scripts/provision-tiger-reader.mjs",
     "speech:dev": "node --env-file-if-exists=.env.local --conditions=react-server --import tsx src/server/speech/server.ts",
     "speech:setup": "node --env-file-if-exists=.env.local --import tsx scripts/setup-speech.mts",
     "speech:build": "node scripts/build-speech.mjs",
-    "test:voice": "node --conditions=react-server --import tsx --test tests/speech.test.ts"
+    "test:voice": "node --env-file-if-exists=.env.local --conditions=react-server --import tsx --test tests/speech.test.ts"
   },
   "dependencies": {
     "@elevenlabs/elevenlabs-js": "^2.69.0",

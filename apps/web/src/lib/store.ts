@@ -114,5 +114,5 @@ export const useStore = create<State>((set) => ({
   setFlagshipHover: (flagshipHover) => set({ flagshipHover }),
   setFlagshipT: (flagshipT) => set({ flagshipT }),
   setSplat: (splatPlot, splatIndex = 0) => set({ splatPlot, splatIndex }),
-  setWorldYear: (worldYear) => set({ worldYear: Math.min(2025, Math.max(2021, Math.round(worldYear))) }),
+  setWorldYear: (worldYear) => set({ worldYear: Math.min(2031, Math.max(1985, Math.round(worldYear))) }),
 }));

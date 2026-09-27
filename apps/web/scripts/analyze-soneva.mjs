@@ -8,7 +8,7 @@
 // where it disagrees more than that.
 //
 // Input: LOD3 splat PLYs (cached in data/cache/soneva). Output:
-// src/data/flagships/soneva-change.json (derived).
+// data/build/atlas/flagships/soneva-change.json (derived; loaded into Tiger by `pnpm db:atlas`).
 //
 // Run: node scripts/analyze-soneva.mjs
 
@@ -107,4 +107,5 @@ for (const [plot, list] of byPlot) {
   result.plots[plot] = { baseline: baseDate, comparisons: rows };
   console.log(plot, baseDate, rows.map((r) => `${r.date} (+${r.days} d): ${r.changedPct}%`).join("  "));
 }
-fs.writeFileSync(path.resolve(here, "../src/data/flagships/soneva-change.json"), JSON.stringify(result, null, 2) + "\n");
+fs.mkdirSync(path.join(ROOT, "data/build/atlas/flagships"), { recursive: true });
+fs.writeFileSync(path.join(ROOT, "data/build/atlas/flagships/soneva-change.json"), JSON.stringify(result, null, 2) + "\n");

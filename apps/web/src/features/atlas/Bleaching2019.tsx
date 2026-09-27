@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import EvidenceTag from "./EvidenceTag";
+import { useDocument } from "@/lib/atlasClient";
 
 type Colony = [x: number, y: number, areaCm2: number, dead: 0 | 1];
 interface Data {
@@ -32,11 +33,9 @@ function PlotMap({ colonies, extent, label }: { colonies: Colony[]; extent: { x0
 
 /** Kopecky et al. 2023: live and dead Pocillopora segmented in co-registered orthomosaics, August 2018 vs August 2019. */
 export default function Bleaching2019() {
-  const [data, setData] = useState<Data | null>(null);
+  const doc = useDocument<Data>("moorea/bleaching2019");
+  const data = doc === "error" ? null : doc;
   const [plot, setPlot] = useState("Plot19");
-  useEffect(() => {
-    import("@/data/flagships/moorea-bleaching2019.json").then((m) => setData(m.default as unknown as Data));
-  }, []);
 
   const extent = useMemo(() => {
     if (!data) return null;
@@ -47,6 +46,7 @@ export default function Bleaching2019() {
     return { x0, y0, span: Math.max(Math.max(...xs) - x0, Math.max(...ys) - y0) * 1.04 };
   }, [data, plot]);
 
+  if (doc === "error") return <section className="side-card"><p className="side-note" role="alert">The 2019 bleaching maps are temporarily unavailable.</p></section>;
   if (!data || !extent) return <section className="side-card" aria-busy="true" />;
   const s = data.summary.find((p) => p.id === plot)!;
   const lossPct = Math.round((1 - s.live2019 / s.live2018) * 100);

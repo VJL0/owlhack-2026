@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { LAGOON_STOPS } from "@/lib/colors";
 import { formatYear } from "@/lib/flagships";
 import { useStore } from "@/lib/store";
+import { fetchDocument } from "@/lib/atlasClient";
 import EvidenceTag from "./EvidenceTag";
 
 interface Lagoon {
@@ -22,7 +23,7 @@ export default function LagoonLegend() {
   const timer = useRef<number | undefined>(undefined);
 
   useEffect(() => {
-    import("@/data/flagships/moorea-lagoon.json").then((m) => setLagoon(m.default as unknown as Lagoon));
+    fetchDocument<Lagoon>("moorea/lagoon").then(setLagoon, () => {}); // the globe layer is optional here
   }, []);
 
   useEffect(() => {

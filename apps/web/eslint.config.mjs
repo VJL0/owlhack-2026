@@ -22,6 +22,8 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
     "public/cesium/**",
+    // Bundled Speech Engine server (scripts/build-speech.mjs)
+    "dist/**",
   ]),
 ]);
 

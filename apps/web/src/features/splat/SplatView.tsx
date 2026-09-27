@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useState } from "react";
-import manifest from "@/data/flagships/soneva-splats.json";
+import { useDocument } from "@/lib/atlasClient";
 import type { SplatSurvey } from "@/lib/flagships";
 import { exitSplat } from "@/lib/navigation";
 import { useStore } from "@/lib/store";
@@ -20,7 +20,8 @@ export default function SplatView() {
   const index = useStore((s) => s.splatIndex);
   const setSplat = useStore((s) => s.setSplat);
   const reduced = useStore((s) => s.reducedMotion);
-  const entry = (manifest.plots as Record<string, { frame: { box: { x: number[]; y: number[]; z: number[] }; origin: number[] }; surveys: SplatSurvey[] }>)[plot];
+  const manifest = useDocument<{ plots: Record<string, { frame: { box: { x: number[]; y: number[]; z: number[] }; origin: number[] }; surveys: SplatSurvey[] }> }>("soneva/splats");
+  const entry = manifest && manifest !== "error" ? manifest.plots[plot] : undefined;
   const surveys = entry?.surveys ?? [];
   const [loads, setLoads] = useState<Record<string, LoadState>>({});
   const [blink, setBlink] = useState<number | null>(null);
@@ -55,6 +56,12 @@ export default function SplatView() {
     };
   }, [surveys.length]);
 
+  if (manifest === "error")
+    return (
+      <p className="boot" role="alert">
+        The 3D survey list is temporarily unavailable. Reload the page to try again.
+      </p>
+    );
   if (!entry) return null;
   const shown = blink ?? index;
   const cur = surveys[shown];

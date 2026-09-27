@@ -1,7 +1,8 @@
 import type * as CesiumNS from "cesium";
 import type { Cesium } from "./loadCesium";
 import { FLAGSHIPS } from "@/lib/flagshipIndex";
-import { loadDossier, type Dossier } from "@/lib/flagships";
+import type { Dossier } from "@/lib/flagships";
+import { fetchDocument, fetchHeat, fetchWorld, loadDossier } from "@/lib/atlasClient";
 import { heatRgb, lagoonTempRgb as tempRgb } from "@/lib/colors";
 import { useStore } from "@/lib/store";
 
@@ -66,49 +67,61 @@ export function addFlagshipMarkers(C: Cesium, viewer: CesiumNS.Viewer, store: St
 
 // ------------------------------------------------------------------ global reef heat layer (world view)
 
-interface GlobalReefs {
-  columns: string[];
-  rows: (number | null)[][];
-}
-
 /**
- * 2,720 reefs from the supplied archive (the same records the /data explorer
- * serves from Tiger Cloud), coloured by that year's peak degree heating weeks.
+ * 2,720 reefs from the supplied archive, coloured by that year's peak degree
+ * heating weeks: the heat history (1985–2025) or the model forecast (2027–2031),
+ * both served from Tiger Cloud. Forecast years get a light outline.
  */
 export function addGlobalReefs(C: Cesium, viewer: CesiumNS.Viewer, store: Store) {
   const points = viewer.scene.primitives.add(new C.PointPrimitiveCollection()) as CesiumNS.PointPrimitiveCollection;
-  let rows: (number | null)[][] = [];
   const scale = new C.NearFarScalar(1.5e6, 1.5, 2.2e7, 1);
-  const paint = () => {
+  const dark = C.Color.fromCssColorString("#010a12").withAlpha(0.7);
+  const light = C.Color.fromCssColorString("#f5f5f7").withAlpha(0.75);
+  let index = new Map<number, number>(); // reef_id → point
+  let disposed = false;
+
+  const hideAll = () => {
+    for (let i = 0; i < points.length; i++) points.get(i).show = false;
+  };
+  const paint = async () => {
     const { worldYear, phase } = store.getState();
-    const show = phase === "world";
-    const col = 3 + (worldYear - 2021);
-    for (let i = 0; i < points.length; i++) {
+    if (phase !== "world" || !index.size) return hideAll();
+    const heat = await fetchHeat(worldYear).catch(() => null);
+    const now = store.getState();
+    if (disposed || now.worldYear !== worldYear || now.phase !== "world") return; // a newer paint owns the layer
+    hideAll();
+    if (!heat) return;
+    const outline = heat.kind === "forecast" ? light : dark;
+    for (const row of heat.rows) {
+      const i = index.get(row[0]);
+      if (i === undefined) continue;
+      const dhw = row[1];
       const p = points.get(i);
-      const dhw = rows[i][col];
-      p.show = show && dhw !== null;
-      if (dhw === null) continue;
-      const [r, g, b] = heatRgb(dhw as number);
-      p.color = new C.Color(r / 255, g / 255, b / 255, 0.55 + Math.min(0.45, (dhw as number) / 16));
+      const [r, g, b] = heatRgb(dhw);
+      p.color = new C.Color(r / 255, g / 255, b / 255, 0.55 + Math.min(0.45, dhw / 16));
+      p.outlineColor = outline;
+      p.show = true;
     }
   };
-  import("@/data/global-reefs.json").then((m) => {
-    rows = (m.default as GlobalReefs).rows;
-    for (const r of rows) {
-      points.add({
-        position: C.Cartesian3.fromDegrees(r[2] as number, r[1] as number, 20),
-        pixelSize: 6,
-        scaleByDistance: scale,
-        outlineWidth: 1,
-        outlineColor: C.Color.fromCssColorString("#010a12").withAlpha(0.7),
-      });
-    }
-    paint();
-  });
+
+  fetchWorld().then(
+    (world) => {
+      if (disposed) return;
+      const next = new Map<number, number>();
+      for (const [id, lat, lon] of world.reefs.rows) {
+        next.set(id, points.length);
+        points.add({ position: C.Cartesian3.fromDegrees(lon, lat, 20), pixelSize: 6, scaleByDistance: scale, outlineWidth: 1, outlineColor: dark, show: false });
+      }
+      index = next;
+      paint();
+    },
+    () => {}, // the world HUD reports the outage
+  );
   const unsub = store.subscribe((s, p) => {
     if (s.worldYear !== p.worldYear || s.phase !== p.phase) paint();
   });
   return () => {
+    disposed = true;
     unsub();
     viewer.scene.primitives.remove(points);
   };
@@ -196,11 +209,16 @@ export function addFlagshipDetail(C: Cesium, viewer: CesiumNS.Viewer, store: Sto
     }
   };
 
+  let lagoonLoaded = false;
   const ensure = (id: Dossier["id"]) => {
-    if (loaded.has(id)) return;
-    loaded.add(id);
-    loadDossier(id).then(addPoints);
-    if (id === "moorea") import("@/data/flagships/moorea-lagoon.json").then((m) => addLagoon(m.default as unknown as Lagoon));
+    if (!loaded.has(id)) {
+      loaded.add(id);
+      loadDossier(id).then(addPoints, () => loaded.delete(id)); // retried on the next visit
+    }
+    if (id === "moorea" && !lagoonLoaded) {
+      lagoonLoaded = true;
+      fetchDocument<Lagoon>("moorea/lagoon").then(addLagoon, () => (lagoonLoaded = false));
+    }
   };
   const unsub = store.subscribe((s) => {
     if (s.flagshipId && (s.phase === "flagship" || s.phase === "splat")) ensure(s.flagshipId);

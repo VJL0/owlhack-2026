@@ -1,5 +1,7 @@
-// Builds the flagship dossiers (src/data/flagships/*.json) and the global reef
-// layer (src/data/global-reefs.json) from the raw public data in /data/raw.
+// Builds the flagship dossiers from the raw public data in /data/raw into
+// data/build/atlas/flagships (ignored by Git); `pnpm db:atlas` loads them into
+// Tiger Cloud, where the app reads them. The global reef layer is queried from
+// Tiger directly (src/lib/server/atlas.ts).
 //
 // Every lane, event and number carries its evidence type:
 //   field     divers / photo surveys        sensor    thermistors on the reef
@@ -10,7 +12,9 @@
 // lists what the other records show inside that interval. It never says which
 // pressure caused a change: co-occurrence is shown as co-occurrence.
 //
-// Run: node scripts/build-flagships.mjs   (after fetch-flagships.mjs)
+// Run: node scripts/build-flagships.mjs   (after fetch-flagships.mjs; the Soneva
+// splat manifest and change analysis come from data:splats, or from Tiger with
+// `pnpm db:atlas --verify-only --export ../../data/build/atlas`)
 
 import fs from "node:fs";
 import path from "node:path";
@@ -19,7 +23,7 @@ import { fileURLToPath } from "node:url";
 const here = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(here, "../../..");
 const RAW = path.join(ROOT, "data/raw");
-const OUT = path.resolve(here, "../src/data/flagships");
+const OUT = path.join(ROOT, "data/build/atlas/flagships");
 fs.mkdirSync(OUT, { recursive: true });
 
 // ------------------------------------------------------------------ helpers
@@ -895,32 +899,6 @@ function buildSoneva() {
   return dossier;
 }
 
-// =================================================================== GLOBAL REEF LAYER
-// The two supplied CSVs (also served from Tiger Cloud): yearly peak DHW 2021–2025
-// per reef, and the survey archive (2013–2020). Output: one row per reef.
-function buildGlobal() {
-  const risk = readCsv(path.join(ROOT, "bleaching_risk_2021_2025.csv"));
-  const stress = readCsv(path.join(ROOT, "reef_stress_analysis.csv"));
-  const reefs = new Map();
-  const get = (r) => {
-    if (!reefs.has(r.reef_id)) reefs.set(r.reef_id, { id: +r.reef_id, lat: +r.latitude, lon: +r.longitude, dhw: [null, null, null, null, null], last: 0, n: 0 });
-    return reefs.get(r.reef_id);
-  };
-  for (const r of risk) get(r).dhw[+r.year - 2021] = r1(+r.peak_dhw);
-  for (const r of stress) {
-    const x = get(r);
-    x.last = Math.max(x.last, +r.year);
-    x.n++;
-  }
-  const rows = [...reefs.values()].sort((a, b) => a.id - b.id).map((x) => [x.id, r3(x.lat), r3(x.lon), ...x.dhw, x.last || null, x.n]);
-  fs.writeFileSync(
-    path.resolve(here, "../src/data/global-reefs.json"),
-    JSON.stringify({ columns: ["reef_id", "lat", "lon", "dhw2021", "dhw2022", "dhw2023", "dhw2024", "dhw2025", "last_survey_year", "surveys"], rows }),
-  );
-  console.log("global-reefs.json".padEnd(28), rows.length, "reefs");
-}
-
 buildMoorea();
 buildLizard();
 buildSoneva();
-buildGlobal();

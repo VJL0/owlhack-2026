@@ -147,8 +147,8 @@ muted until the user enables conversation).
 Gemini's full tool loop streams text, retains thought signatures and function
 responses, and receives the SDK's abort signal. Cancelled turns cannot publish
 pending navigation actions. Existing data/page tool implementations are unchanged.
-The existing `REEF_DATA=json` default is unchanged; `REEF_DATA=tiger` was already
-unsupported by the agent's data adapter before this migration.
+The agent's data tools read Tiger Cloud (`src/server/reef/tigerReefData.ts`), so the
+`speech` container needs the same `tiger.env` as `web` (Compose already loads it).
 
 Validation: `pnpm test:voice`, `pnpm typecheck`, and `pnpm build`. After deployment,
 verify a spoken reef question, a page-navigation command, a follow-up using

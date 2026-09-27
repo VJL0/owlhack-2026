@@ -1,11 +1,16 @@
+import { datasetBySlug } from './datasets.mjs';
+
 export class InvalidFilter extends Error {}
+const PAGE_SIZE = 50;
+
 export function parseFilters(params) {
   const allowed = new Set(['dataset', 'year', 'reef', 'page']);
   for (const key of params.keys()) {
     if (!allowed.has(key) || params.getAll(key).length !== 1) throw new InvalidFilter('Unknown or repeated filter');
   }
   const dataset = params.get('dataset') ?? 'risk';
-  if (dataset !== 'risk' && dataset !== 'stress') throw new InvalidFilter('Dataset must be risk or stress');
+  const source = datasetBySlug(dataset);
+  if (!source) throw new InvalidFilter('Unknown dataset');
   const integer = (key, min, max) => {
     const raw = params.get(key);
     if (raw === null || raw === '') return null;
@@ -16,9 +21,10 @@ export function parseFilters(params) {
   };
   return {
     dataset,
-    year: integer('year', dataset === 'risk' ? 2021 : 2013, dataset === 'risk' ? 2025 : 2020),
-    reef: integer('reef', 1, 2147483647),
-    page: integer('page', 1, 1000) ?? 1,
-    pageSize: 50,
+    // Datasets without a year or reef column accept no such filter.
+    year: source.years ? integer('year', ...source.years) : integer('year', 1, 0),
+    reef: source.reefs ? integer('reef', 1, 2147483647) : integer('reef', 1, 0),
+    page: integer('page', 1, Math.ceil(source.rows / PAGE_SIZE)) ?? 1,
+    pageSize: PAGE_SIZE,
   };
 }

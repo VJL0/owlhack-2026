@@ -13,3 +13,5 @@ tiger-cloud-*-credentials.*
 
 # Large downloads reproduced by apps/web/scripts (never commit)
 data/cache/
+# Pipeline output loaded into Tiger Cloud by `pnpm db:atlas` (the app reads Tiger)
+data/build/

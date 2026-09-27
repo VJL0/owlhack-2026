@@ -52,6 +52,8 @@
 .stage .evidence-tag[data-kind="track"] i { background: transparent; box-shadow: inset 0 0 0 1.5px #b8a8ff; border-radius: 50% 0 50% 50%; }
 .stage .evidence-tag[data-kind="reported"] i { border-radius: 2px; background: transparent; box-shadow: inset 0 0 0 1.5px #c7c7cc; }
 .stage .evidence-tag[data-kind="derived"] i { background: linear-gradient(90deg, #f5f5f7 50%, transparent 50%); box-shadow: inset 0 0 0 1px #f5f5f7; }
+.stage .evidence-tag[data-kind="estimated"] i { background: transparent; border: 1.5px dotted #ff8a4c; }
+.stage .evidence-tag[data-kind="model"] i { background: transparent; border: 1.5px dashed #f5f5f7; }
 
 /* ------------------------------------------------------------------ small controls */
 .stage .btn-chip {
@@ -209,33 +211,6 @@
   font-size: 15px;
   font-weight: 600;
   letter-spacing: -0.01em;
-}
-
-.stage .wh-years {
-  display: flex;
-  gap: 4px;
-  padding: 3px;
-  border-radius: 12px;
-  background: rgba(118, 118, 128, 0.24);
-}
-
-.stage .wh-years button {
-  flex: 1;
-  padding: 5px 0;
-  border: 0;
-  border-radius: 9px;
-  background: transparent;
-  color: var(--aqua);
-  font-size: 13px;
-  font-weight: 500;
-  font-variant-numeric: tabular-nums;
-  transition: background-color 180ms ease-out, color 180ms ease-out;
-}
-
-.stage .wh-years button[aria-checked="true"] {
-  background: rgba(255, 255, 255, 0.22);
-  color: var(--bone);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
 }
 
 .stage .wh-ramp > span,
@@ -1022,3 +997,79 @@
   -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 28px), transparent);
   padding-bottom: 28px;
 }
+
+/* ------------------------------------------------------------------ world heat year slider */
+.stage .wh-slider {
+  display: grid;
+  grid-template-columns: 24px 1fr 24px;
+  align-items: center;
+  gap: 6px;
+}
+
+.stage .wh-slider button {
+  width: 24px;
+  height: 24px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(118, 118, 128, 0.24);
+  color: var(--bone);
+  font-size: 15px;
+  line-height: 1;
+}
+
+.stage .wh-slider button:disabled { opacity: 0.35; }
+
+.stage .wh-slider input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  margin: 0;
+  border-radius: 3px;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  cursor: pointer;
+}
+
+.stage .wh-slider input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--bone);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
+}
+
+.stage .wh-slider input[type="range"]::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--bone);
+}
+
+.stage .wh-slider input[type="range"]::-moz-range-track { background: transparent; }
+
+.stage .wh-slider input[type="range"]:focus-visible {
+  outline: 2px solid var(--aqua);
+  outline-offset: 4px;
+}
+
+.stage .wh-ticks {
+  position: relative;
+  height: 12px;
+  margin: -4px 30px 0;
+  font-size: 10px;
+  color: var(--label-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.stage .wh-ticks em {
+  position: absolute;
+  font-style: normal;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.stage .wh-ticks em:first-child { transform: none; }
+.stage .wh-ticks em:last-child { transform: translateX(-100%); }

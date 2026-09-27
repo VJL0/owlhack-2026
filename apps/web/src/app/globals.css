@@ -1607,3 +1607,20 @@ body {
   margin: 0;
   white-space: nowrap;
 }
+
+/* Tiger Cloud unreachable before the experience could start */
+.boot-error {
+  pointer-events: auto;
+  color: rgba(169, 216, 208, 0.8);
+}
+
+.boot-error button {
+  margin-left: 12px;
+  padding: 4px 12px;
+  border: 1px solid rgba(169, 216, 208, 0.4);
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}

@@ -1,15 +1,13 @@
 import "server-only";
 import type { FunctionDeclaration } from "@google/genai";
-import moorea from "@/data/flagships/moorea.json";
-import lizard from "@/data/flagships/lizard-island.json";
-import soneva from "@/data/flagships/soneva-fushi.json";
 import { EVIDENCE_LABEL, formatYear, type Dossier } from "@/lib/flagships";
+import { getDocumentText } from "@/lib/server/atlas";
 
-const DOSSIERS: Record<string, Dossier> = {
-  moorea: moorea as unknown as Dossier,
-  "lizard-island": lizard as unknown as Dossier,
-  "soneva-fushi": soneva as unknown as Dossier,
-};
+const FLAGSHIP_IDS = ["moorea", "lizard-island", "soneva-fushi"] as const;
+type FlagshipId = (typeof FLAGSHIP_IDS)[number];
+const isFlagshipId = (id: unknown): id is FlagshipId => FLAGSHIP_IDS.includes(id as FlagshipId);
+/** Dossiers live in Tiger Cloud (reef_data.atlas_documents). */
+const dossier = async (id: FlagshipId) => JSON.parse(await getDocumentText(`flagship/${id}`)) as Dossier;
 
 export const flagshipToolDeclaration: FunctionDeclaration = {
   name: "get_flagship_evidence",
@@ -18,7 +16,7 @@ export const flagshipToolDeclaration: FunctionDeclaration = {
   parametersJsonSchema: {
     type: "object",
     properties: {
-      flagship_id: { type: "string", enum: Object.keys(DOSSIERS) },
+      flagship_id: { type: "string", enum: [...FLAGSHIP_IDS] },
       from_year: { type: "number", description: "Start year, inclusive, e.g. 2018. Default: start of the record." },
       to_year: { type: "number", description: "End year, inclusive, e.g. 2020. Default: end of the record." },
     },
@@ -27,9 +25,9 @@ export const flagshipToolDeclaration: FunctionDeclaration = {
 };
 
 /** A compact, spoken-answer-sized view of a dossier, limited to a window of years. */
-export function flagshipEvidence(args: Record<string, unknown>) {
-  const d = DOSSIERS[String(args.flagship_id)];
-  if (!d) return { error: `flagship_id must be one of ${Object.keys(DOSSIERS).join(", ")}.` };
+export async function flagshipEvidence(args: Record<string, unknown>) {
+  if (!isFlagshipId(args.flagship_id)) return { error: `flagship_id must be one of ${FLAGSHIP_IDS.join(", ")}.` };
+  const d = await dossier(args.flagship_id);
   const from = typeof args.from_year === "number" ? args.from_year : d.span[0];
   const to = (typeof args.to_year === "number" ? args.to_year : d.span[1]) + 0.999;
   const inWin = (t: number) => t >= from && t <= to;

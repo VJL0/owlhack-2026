@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { loadDossier, type Change, type Dossier as DossierData, type Presence } from "@/lib/flagships";
+import { type Change, type Dossier as DossierData, type Presence } from "@/lib/flagships";
+import { loadDossier } from "@/lib/atlasClient";
 import { useStore } from "@/lib/store";
 import { SPRING } from "@/lib/ui";
 import EvidenceTag from "./EvidenceTag";
@@ -83,6 +84,7 @@ function Changes({ d, selected, onSelect }: { d: DossierData; selected: Change |
 export default function Dossier() {
   const id = useStore((s) => s.flagshipId);
   const [d, setD] = useState<DossierData | null>(null);
+  const [failed, setFailed] = useState<string | null>(null);
   const [change, setChange] = useState<Change | null>(null);
   const [evidenceH, setEvidenceH] = useState(320);
   const evidenceRef = useRef<HTMLDivElement>(null);
@@ -99,16 +101,26 @@ export default function Dossier() {
   useEffect(() => {
     let live = true;
     if (!id) return;
-    loadDossier(id).then((x) => {
-      if (!live) return;
-      setD(x);
-      setChange(null);
-    });
+    loadDossier(id).then(
+      (x) => {
+        if (!live) return;
+        setD(x);
+        setChange(null);
+        setFailed(null);
+      },
+      () => live && setFailed(id),
+    );
     return () => {
       live = false;
     };
   }, [id]);
 
+  if (failed === id && (!d || d.id !== id))
+    return (
+      <p className="boot" role="alert">
+        This dossier is temporarily unavailable. Reload the page to try again.
+      </p>
+    );
   if (!d || d.id !== id) return <p className="boot" aria-live="polite" />;
 
   return (

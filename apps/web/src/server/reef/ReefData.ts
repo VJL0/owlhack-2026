@@ -1,5 +1,4 @@
-// The data the voice agent can ask for. Two implementations fill it:
-// jsonReefData (the bundled sample JSON, now) and a Tiger/TimescaleDB one (later).
+// The data the voice agent can ask for, answered by tigerReefData from Tiger Cloud.
 // Dates are ISO "YYYY-MM-DD" strings and ranges are inclusive, so SQL maps 1:1.
 
 export interface SiteInfo {

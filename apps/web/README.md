@@ -6,10 +6,14 @@ A cinematic 3D journey into Florida's Coral Reef, 2016–2024: from the night si
 pnpm install
 pnpm dev            # http://localhost:3000 (copies Cesium into public/cesium first)
 pnpm build          # Next.js production build + Speech Engine server bundle
-pnpm data           # rebuild src/data/*.json from /data/raw
+pnpm data           # rebuild the Florida bundle from /data/raw into data/build/atlas
+pnpm db:atlas       # load data/build/atlas into Tiger Cloud and verify the read-back
 ```
 
-Deep link straight underwater: `/#reef=looe-key` (any site id from `src/data/sites.json`).
+All data is read from Tiger Cloud at runtime (`TIGER_DATABASE_URL` in `.env.local`);
+the repository holds no JSON or CSV copies. See [`database/README.md`](database/README.md).
+
+Deep link straight underwater: `/#reef=looe-key` (any site id in `reef_data.florida_sites`).
 
 ## The experience
 
@@ -31,6 +35,7 @@ Every number on screen carries a glyph: ● observed, ◌ model output, ⊘ simu
 
 | Layer | Source | Kind |
 | --- | --- | --- |
+| World view: peak heat stress per reef, 1985–2025, and forecast 2027–2031 with back-tested skill | supplied heat history (each value labelled observed or estimated) and ridge-model forecast | observed / estimated / model |
 | Degree Heating Weeks, SST, anomaly, alert level (9 sites, weekly) | NOAA Coral Reef Watch 5 km via PacIOOS ERDDAP | observed |
 | Hurricane tracks, closest approach per site | NOAA NHC HURDAT2 (2025 release) | observed / derived |
 | Lionfish records within 25 km | USGS Nonindigenous Aquatic Species | observed |
@@ -42,7 +47,9 @@ Coral appearance is a visualization of DHW using NOAA's published thresholds (4 
 
 ## Where the backend plugs in
 
-`src/lib/data.ts` and `src/lib/model.ts` define the shapes the UI consumes:
+The Florida data already comes from Tiger (`/api/atlas/florida`, loaded once by
+`FloridaGate` before the experience starts). `src/lib/data.ts` and
+`src/lib/model.ts` define the shapes the UI consumes:
 
 - `FeatureSnapshot` mirrors one row of `reef_feature_snapshots`
 - `ModelOutput` = `{ probability, baseProbability, magnitude, shap, contributionPP, interaction }`
@@ -62,9 +69,11 @@ src/
                        environment, constellation, camera rig, effects, labels
     hud/               region/reef HUDs, evidence slate, pressure index
     timeline/          time-travel control
-  lib/                 data access, demo model, store, narrative, colours
-  data/                generated JSON (committed; app runs offline except map tiles)
-scripts/               copy-cesium.mjs, build-data.mjs
+  lib/                 data access, atlasClient (reads /api/atlas), demo model, store,
+                       narrative, colours
+  lib/server/          server-only Tiger queries (atlas, explorer)
+database/              migrations, dataset allowlist, atlas read/load code, CSV rebuilder
+scripts/               copy-cesium, build-data, build-flagships, import-tiger, import-atlas
 ```
 
 ## Deployment
@@ -80,3 +89,4 @@ for that service. See [Speech Engine setup](../../infra/README.md#speech-engine-
 for engine creation, a development tunnel, and Vultr deployment.
 
 `pnpm test:voice` checks streaming, tool preservation, interruption and typed fallback.
+It reads Tiger through `.env.local`, because the agent's data tools are SQL queries.

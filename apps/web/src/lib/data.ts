@@ -1,10 +1,8 @@
-import sitesJson from "@/data/sites.json";
-import thermalJson from "@/data/thermal.json";
-import stormsJson from "@/data/storms.json";
-import lionfishJson from "@/data/lionfish.json";
-import simulatedJson from "@/data/simulated.json";
-import metaJson from "@/data/meta.json";
 import { clamp, monthIndex } from "./time";
+
+// The Florida scene's data lives in Tiger Cloud (reef_data.florida_* tables) and
+// arrives once from /api/atlas/florida before the experience starts; see
+// FloridaGate. The exports below are live bindings filled by setFloridaData.
 
 export type Provenance = "observed" | "derived" | "model" | "simulated";
 
@@ -62,17 +60,58 @@ interface Simulated {
   sites: Record<string, { fishingHours: number[]; vesselHours: number[]; sarDetections: number[]; sarUnmatched: number[] }>;
 }
 
-export const SITES = sitesJson as Site[];
-export const THERMAL = thermalJson as Thermal;
-export const STORMS = stormsJson as Storm[];
-export const LIONFISH = lionfishJson as LionfishRecord[];
-export const SIMULATED = simulatedJson as Simulated;
-export const META = metaJson;
+interface Meta {
+  generated: string;
+  sources: Record<string, { name: string; url: string; kind: Provenance }>;
+}
+
+export interface FloridaData {
+  sites: Site[];
+  thermal: Thermal;
+  storms: Storm[];
+  lionfish: LionfishRecord[];
+  simulated: Simulated;
+  meta: Meta;
+}
+
+export let SITES: Site[] = [];
+export let THERMAL: Thermal = { dates: [], days: [], sites: {} };
+export let STORMS: Storm[] = [];
+export let LIONFISH: LionfishRecord[] = [];
+export let SIMULATED: Simulated = { months: [], sites: {} };
+export let META: Meta = { generated: "", sources: {} };
+/** Reef tract order, north to south-west (Biscayne → Dry Tortugas). */
+export let TRACT_ORDER: string[] = [];
+
+export function setFloridaData(d: FloridaData) {
+  SITES = d.sites;
+  THERMAL = d.thermal;
+  STORMS = d.storms;
+  LIONFISH = d.lionfish;
+  SIMULATED = d.simulated;
+  META = d.meta;
+  TRACT_ORDER = SITES.map((s) => s.id);
+}
+
+export const floridaReady = () => SITES.length > 0;
+
+let pending: Promise<void> | null = null;
+/** Fetch the Florida data once per page; a failed attempt can be retried. */
+export function loadFloridaData() {
+  pending ??= fetch("/api/atlas/florida")
+    .then((r) => {
+      if (!r.ok) throw new Error(`Florida data: HTTP ${r.status}`);
+      return r.json() as Promise<FloridaData>;
+    })
+    .then(setFloridaData)
+    .catch((e) => {
+      pending = null;
+      throw e;
+    });
+  return pending;
+}
 
 export const siteById = (id: string) => SITES.find((s) => s.id === id) ?? SITES[0];
-
-/** Reef tract order, north to south-west (Biscayne → Dry Tortugas). */
-export const TRACT_ORDER = SITES.map((s) => s.id);
 
 // ------------------------------------------------------------------ thermal
 

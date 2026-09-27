@@ -16,11 +16,17 @@ test('bad configuration fails closed', () => {
   for (const value of ['0', '21', '1.2', 'NaN']) assert.throws(() => connectionConfig('postgres://u:p@example.com/db', { TIGER_POOL_MAX: value }));
 });
 test('filters reject SQL injection, out-of-range values, duplicate and unknown keys', () => {
-  for (const query of ['dataset=other', 'reef=1;DROP TABLE x', 'year=2020', 'dataset=stress&year=2025', 'page=0', 'page=1001', 'reef=1&reef=2', 'sort=password', 'reef=1.5', 'reef=2147483648']) {
+  for (const query of ['dataset=other', 'dataset=reef_data.imports', 'reef=1;DROP TABLE x', 'year=2020', 'dataset=stress&year=2025', 'dataset=history&year=2026', 'dataset=forecast&year=2025',
+    'dataset=validation&year=2027', 'dataset=validation&reef=4', 'page=0', 'page=266', 'dataset=history&page=2121', 'reef=1&reef=2', 'sort=password', 'reef=1.5', 'reef=2147483648']) {
     assert.throws(() => parseFilters(new URLSearchParams(query)), InvalidFilter, query);
   }
 });
 test('historical and risk filters keep distinct year ranges', () => {
   assert.deepEqual(parseFilters(new URLSearchParams('dataset=stress&year=2013&reef=4&page=2')), { dataset: 'stress', year: 2013, reef: 4, page: 2, pageSize: 50 });
   assert.equal(parseFilters(new URLSearchParams()).year, null);
+});
+test('heat datasets filter by their own years; validation pages only', () => {
+  assert.deepEqual(parseFilters(new URLSearchParams('dataset=history&year=1985&reef=4&page=2120')), { dataset: 'history', year: 1985, reef: 4, page: 2120, pageSize: 50 });
+  assert.equal(parseFilters(new URLSearchParams('dataset=forecast&year=2031')).year, 2031);
+  assert.deepEqual(parseFilters(new URLSearchParams('dataset=validation')), { dataset: 'validation', year: null, reef: null, page: 1, pageSize: 50 });
 });

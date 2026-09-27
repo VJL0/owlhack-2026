@@ -1,6 +1,8 @@
 // Flagship reefs: places where repeated, public field evidence lets the atlas
-// reconstruct what happened between surveys. The dossier JSON is built by
-// scripts/build-flagships.mjs from /data/raw; nothing here is simulated.
+// reconstruct what happened between surveys. Dossiers are built by
+// scripts/build-flagships.mjs from /data/raw, stored in Tiger Cloud
+// (reef_data.atlas_documents) and served by /api/atlas/documents (see loadDossier in
+// atlasClient.ts); nothing here is simulated. Shared by client and server code.
 
 /** Where a number comes from. Shown on every lane, value and event. */
 export type Evidence =
@@ -9,7 +11,9 @@ export type Evidence =
   | "satellite" // remote sensing (NOAA Coral Reef Watch)
   | "track" // cyclone best track (IBTrACS)
   | "reported" // a monitoring program's own attribution of a change
-  | "derived"; // computed here from the sources above
+  | "derived" // computed here from the sources above
+  | "estimated" // labelled estimated, not observed, by the dataset's supplier
+  | "model"; // a statistical forecast
 
 export const EVIDENCE_LABEL: Record<Evidence, string> = {
   field: "Field survey",
@@ -18,6 +22,8 @@ export const EVIDENCE_LABEL: Record<Evidence, string> = {
   track: "Storm track",
   reported: "Reported cause",
   derived: "Derived here",
+  estimated: "Estimated",
+  model: "Model forecast",
 };
 
 export type FlagshipId = "moorea" | "lizard-island" | "soneva-fushi" | "florida";
@@ -162,15 +168,4 @@ export function formatYear(t: number, withMonth = true) {
   if (!withMonth) return String(y);
   const m = Math.min(11, Math.floor((t - y) * 12));
   return `${MONTHS[m]} ${y}`;
-}
-
-export async function loadDossier(id: Dossier["id"]): Promise<Dossier> {
-  switch (id) {
-    case "moorea":
-      return (await import("@/data/flagships/moorea.json")).default as unknown as Dossier;
-    case "lizard-island":
-      return (await import("@/data/flagships/lizard-island.json")).default as unknown as Dossier;
-    case "soneva-fushi":
-      return (await import("@/data/flagships/soneva-fushi.json")).default as unknown as Dossier;
-  }
 }

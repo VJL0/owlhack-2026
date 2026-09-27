@@ -1,7 +1,7 @@
 import type { Content, Part } from "@google/genai";
 import type { Lang, UiAction } from "@/lib/voiceActions";
 import { generateStream, GEMINI_MODEL } from "@/server/gemini";
-import { getReefData } from "@/server/reef";
+import { getReefData, type SiteInfo } from "@/server/reef";
 import { isPageTool, pageToolDeclarations, toAction } from "./pageTools";
 import { runTool, toolDeclarations } from "./tools";
 
@@ -33,8 +33,7 @@ export interface ToolTrace {
 
 const LANG_NAME: Record<Lang, string> = { en: "English", es: "Spanish" };
 
-async function systemPrompt(ctx: AgentContext) {
-  const sites = await getReefData().listSites();
+function systemPrompt(ctx: AgentContext, sites: SiteInfo[]) {
   const current = sites.find((s) => s.id === ctx.siteId);
   const lang = LANG_NAME[ctx.lang ?? "en"];
   return [
@@ -89,9 +88,11 @@ export async function* streamAgent(history: Content[], ctx: AgentContext, signal
   const contents: Content[] = [...history];
   const trace: ToolTrace[] = [];
   const actions: UiAction[] = [];
+  const sites = await getReefData().listSites();
+  const siteIds = sites.map((s) => s.id);
   const config = {
-    systemInstruction: await systemPrompt(ctx),
-    tools: [{ functionDeclarations: [...toolDeclarations, ...pageToolDeclarations] }],
+    systemInstruction: systemPrompt(ctx, sites),
+    tools: [{ functionDeclarations: [...toolDeclarations, ...pageToolDeclarations(siteIds)] }],
   };
   // Once a turn falls back to another model, stay on it so the conversation's thought signatures match.
   let model = GEMINI_MODEL;
@@ -131,7 +132,7 @@ export async function* streamAgent(history: Content[], ctx: AgentContext, signal
         const args = (c.args ?? {}) as Record<string, unknown>;
         let result: unknown;
         if (isPageTool(name)) {
-          const action = toAction(name, args);
+          const action = toAction(name, args, siteIds);
           if ("error" in action) result = action;
           else {
             actions.push(action);

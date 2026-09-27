@@ -7,6 +7,8 @@ const HINT: Record<Evidence, string> = {
   track: "Cyclone position and wind from best-track records",
   reported: "The monitoring program's own attribution of a change",
   derived: "Computed by Reef Atlas from the sources above",
+  estimated: "Labelled estimated, not observed, in the supplied dataset",
+  model: "A statistical forecast from past heat, back-tested on earlier years; not an observation",
 };
 
 /** Says where a number comes from, in words, with the same mark everywhere. */

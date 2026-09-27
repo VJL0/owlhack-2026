@@ -1,17 +1,17 @@
 import type { FunctionDeclaration } from "@google/genai";
-import { SITES } from "@/lib/data";
 import { MAP_LAYERS, type MapLayer, type UiAction } from "@/lib/voiceActions";
 
 // Tools that move the page instead of reading data. The server only checks them;
 // the browser runs them after the answer arrives (see lib/navigation.ts).
 
-export const pageToolDeclarations: FunctionDeclaration[] = [
+/** Site ids come from Tiger (reef_data.florida_sites) for each conversation. */
+export const pageToolDeclarations = (siteIds: string[]): FunctionDeclaration[] => [
   {
     name: "go_to_reef",
     description: "Dive into one reef's underwater view. Use for 'take me to X', 'go to X', 'show me X'.",
     parametersJsonSchema: {
       type: "object",
-      properties: { site_id: { type: "string", enum: SITES.map((s) => s.id) } },
+      properties: { site_id: { type: "string", enum: siteIds } },
       required: ["site_id"],
     },
   },
@@ -66,15 +66,15 @@ export const pageToolDeclarations: FunctionDeclaration[] = [
   },
 ];
 
-const NAMES = new Set(pageToolDeclarations.map((d) => d.name));
+const NAMES = new Set(pageToolDeclarations([]).map((d) => d.name));
 export const isPageTool = (name: string) => NAMES.has(name);
 
 /** Check arguments and turn a call into a UiAction, or explain what is wrong. */
-export function toAction(name: string, a: Record<string, unknown>): UiAction | { error: string } {
+export function toAction(name: string, a: Record<string, unknown>, siteIds: string[]): UiAction | { error: string } {
   switch (name) {
     case "go_to_reef": {
       const id = a.site_id;
-      if (typeof id !== "string" || !SITES.some((s) => s.id === id)) return { error: `Unknown site_id "${String(id)}".` };
+      if (typeof id !== "string" || !siteIds.includes(id)) return { error: `Unknown site_id "${String(id)}".` };
       return { type: "go_to_reef", siteId: id };
     }
     case "go_to_map":

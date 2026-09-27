@@ -1,12 +1,20 @@
 # TigerData integration
 
-The `/data` explorer and `/api/reef-data` read Tiger Cloud at request time using
-`pg` from server-only modules. The home page links to the explorer. No database
-credentials or CSV data are embedded in the browser bundle or production image.
+Every dataset the app shows lives in Tiger Cloud, schema `reef_data`, and is read
+at request time with `pg` from server-only modules: the `/data` explorer,
+`/api/reef-data`, the app data routes under `/api/atlas/*`, and the voice agent's
+data tools. The repository and the production image hold no JSON or CSV copies,
+and no credentials reach the browser bundle.
 
-The two CSVs are global (2,720 reefs) and use their own reef IDs. 740 of those
-reefs are in the Florida Keys (lat 24.44–27.18, lon −82.98 to −80.02). They are
-**not** joined to the nine demonstration sites in the 3D scene: no ID mapping
+| Migration | Contents | Loaded by |
+| --- | --- | --- |
+| `001_reef_data.sql` | `reefs`, `bleaching_risk`, `reef_stress` (supplied CSVs) | `pnpm db:import` |
+| `002_heat.sql` | `heat_history`, `heat_forecast`, `heat_forecast_validation` (supplied CSVs) | `pnpm db:import` |
+| `003_atlas.sql` | Florida demonstration (`florida_sites`, `florida_thermal`, `storms`, `storm_fixes`, `storm_site_passes`, `lionfish_records`, `lionfish_site_distances`, `florida_simulated_activity`, `florida_sources`) and `atlas_documents` (flagship dossiers) | `pnpm db:atlas` |
+
+The supplied datasets are global (2,720 reefs) and use their own reef IDs. 740 of
+those reefs are in the Florida Keys (lat 24.44–27.18, lon −82.98 to −80.02). They
+are **not** joined to the nine demonstration sites in the 3D scene: no ID mapping
 exists, and the Florida scene's bleaching model stays a labeled demonstration.
 
 ## Service
@@ -15,23 +23,36 @@ exists, and the Florida scene's bleaching model stays a labeled demonstration.
 | --- | --- |
 | Service | `db-49612` (`kv9svovb8v`), AWS us-east-1, environment `DEV` |
 | Engine | PostgreSQL 18.6, TimescaleDB 2.30.1 |
+| Size | 4 CPU / 16 GB, one HA replica, `max_connections = 200` (checked 2026-09-27); database 36 MB |
 | Endpoint | direct `…tsdb.cloud.timescale.com:36161`, database `tsdb` |
 | TLS | TLS 1.3; certificate issued by Google Trust Services (root GTS Root R1), which Node trusts by default |
 
 ## Reviewed source files
 
-Only these repository-root files are accepted by the importer. They are never
-edited. Expected SHA-256 hashes are pinned in `datasets.mjs`.
+Only these files are accepted by the importer, read from the repository root for
+a first import. They are never edited. Expected SHA-256 hashes are pinned in
+`datasets.mjs`. Since 2026-09-27 they live only in Tiger: every import and
+`pnpm db:verify` rebuilds each file from its view and checks the hash, and
+`pnpm db:export <dir>` writes them back out byte for byte.
 
 | File | Rows | Period | Grain |
 | --- | ---: | --- | --- |
 | bleaching_risk_2021_2025.csv | 13,245 | 2021–2025 | Unique reef/year (2,649 reefs) |
 | reef_stress_analysis.csv | 5,294 | 2013–2020 | Survey record; 528 repeated reef/year keys |
+| heat_history_1985_2025.csv | 105,960 | 1985–2025, no 2003 | Unique reef/year (2,649 reefs), `observed` or `estimated` |
+| heat_forecast_2027_2031.csv | 13,245 | 2027–2031 | Unique reef/year, ridge model, horizon 1–5 |
+| heat_forecast_validation.csv | 20 | – | Unique model/horizon (4 models × 5 horizons) |
+
+All five were written by pandas: CRLF line ends, minimal quoting, Python `repr`
+floats (always a decimal point), `True`/`False`. `csv-export.mjs` reproduces that
+format exactly; `csv-export.test.mjs` pins the float rules.
 
 Missing values stay SQL NULL: 1,026 coral-cover, 200 bleaching, and 10 depth
 values. `source_row` is the one-based CSV data-record ordinal (header excluded).
 
-## Schema (`001_reef_data.sql`, schema `reef_data`)
+## Schema (schema `reef_data`)
+
+### Supplied datasets (`001_reef_data.sql`, `002_heat.sql`)
 
 - `reefs`: one row per `reef_id` with latitude/longitude. Both files repeat the same
   coordinates on every row, so they are stored once (3NF). The importer fails if a
@@ -39,7 +60,39 @@ values. `source_row` is the one-based CSV data-record ordinal (header excluded).
 - `bleaching_risk`, `reef_stress`: the measurements, with foreign keys to `reefs`.
 - `bleaching_risk_records`, `reef_stress_records`: views that return exactly the
   CSV columns in CSV order, plus `source_row`. The app and verification read these.
+- `heat_history`, `heat_forecast`, `heat_forecast_validation` (002) follow the same
+  pattern, with `*_records` views in CSV column order. `ocean` stays on each heat
+  row because the two heat files label reef 1000056 differently (Indian in the
+  history, Pacific in the forecast); both are kept as supplied. CHECKs encode the
+  forecast's invariants (p10 ≤ median ≤ p90, forecast within p10–p90, P(≥8) ≤
+  P(≥4), horizon = year − 2026), all verified on the file before they were written.
+  A composite foreign key requires every forecast row to have back-test skill for
+  its model and horizon, so `heat_forecast_validation` is imported first.
 - `imports` (file hash and row count per file), `schema_migrations` (migration checksum).
+
+### App data (`003_atlas.sql`)
+
+What used to ship as `src/data/*.json`, loaded by `scripts/import-atlas.mjs`:
+
+- Relational, because the voice agent queries it: `florida_sites` (tract order,
+  CRW pixel), `florida_thermal` (weekly samples at 12:00 UTC), `storms`,
+  `storm_fixes` (HURDAT2 fixes; blank record identifiers are NULL),
+  `storm_site_passes` (closest approach), `lionfish_records` (with `source_row`,
+  the order of the source listing within a day), `lionfish_site_distances`,
+  `florida_simulated_activity` (commented as SIMULATED), `florida_sources`.
+- `atlas_documents (doc_id, body json)`: the flagship dossiers, Moorea lagoon and
+  2019 plots, the Soneva splat manifest and change analysis. They are assembled
+  documents that one screen reads whole, and their key order sets on-screen order.
+  Tiger's `design-postgres-tables` guidance prefers `jsonb` but reserves `json`
+  for when "the original ordering of the contents MUST be preserved", which is
+  this case. `CHECK (json_typeof(body) = 'object')`.
+- `atlas_imports (dataset, sha256, built_on)`: the SHA-256 of each dataset as the
+  app reads it back, recorded at load.
+
+`database/atlas.mjs` holds both the read functions (used by `/api/atlas/*`) and the
+loader. A load replaces the whole bundle in one transaction, reads every dataset
+back through those same read functions, and commits only if the read-back is
+identical to the input.
 
 Types follow Tiger's `design-postgres-tables` guidance: `double precision` for
 measured floats, `integer` for bounded IDs, years and counts, `date` for survey
@@ -52,9 +105,10 @@ for dates (cast to text so the driver cannot shift them by time zone).
 insert-heavy time series. Its candidate criteria list "Large volumes (1M+ rows),
 time-based queries, infrequent updates" and treat "small static tables" as poor
 candidates. Columnstore `segmentby` also needs more than 100 rows per segment
-value per chunk, but these files have one row per reef per year. At about 18.5k
-static annual rows, hypertables, columnstore and continuous aggregates would add
-chunk overhead with no benefit. Revisit when daily observations or continuous
+value per chunk, but these files have one row per reef per year. The largest
+table (`heat_history`) has about 106k static annual rows and the whole schema is
+36 MB, so hypertables, columnstore and continuous aggregates would add chunk
+overhead with no benefit. Revisit when daily observations or continuous
 ingestion arrive, using the `setup-timescaledb-hypertables` guidance. No retention
 policy deletes these historical records.
 
@@ -86,15 +140,23 @@ Use Node 24 and `pnpm install --frozen-lockfile` in `apps/web`.
 1. Put the admin URL from the downloaded credentials in the ignored file
    `.env.tiger-admin` as `TIGER_ADMIN_URL` (mode 0600). The app runtime never
    uses it. Credential downloads (`tiger-cloud-*-credentials.*`) are ignored by Git.
-2. Run `pnpm db:validate`, then `pnpm db:import`, then `pnpm db:verify`.
+2. Run `pnpm db:validate`, then `pnpm db:import` (migrations and the supplied
+   CSVs; the files are needed only for a first import), then `pnpm db:atlas`
+   (app data from `data/build/atlas`, or `pnpm db:atlas -- --from <dir>`), then
+   `pnpm db:verify`. To rebuild flagship dossiers without re-running the splat
+   pipeline, first write Tiger's copy into the build directory with
+   `node --env-file=.env.tiger-admin scripts/import-atlas.mjs --verify-only --export ../../data/build/atlas`.
+   Both importers accept `--dry-run` (everything, then roll back).
 3. Run `pnpm db:reader` once (set `TIGER_READER_ENV_FILE=.env.local` to write the
    file directly). It refuses an existing role or file, so it never rotates live
    credentials. If it fails while writing the file or committing, check the role
    and file state before you retry.
 4. For production, install the reader file as `/opt/reefatlas/secrets/tiger.env`,
    owned by the deploy operator with mode 0600. Compose loads it through
-   `env_file`, and `TIGER_ENV_FILE` overrides the path. If the file is missing the
-   demo still boots, and the dataset API returns 503 until it is configured.
+   `env_file`, and `TIGER_ENV_FILE` overrides the path. The `speech` container
+   loads the same file for the agent's data tools. If the file is missing the
+   server still boots, but every data route returns 503 and the page says reef
+   data is temporarily unavailable: there is no local fallback.
 
 **TLS.** `database/connection.mjs` strips every `ssl*` URL parameter and always
 sets `ssl.rejectUnauthorized = true`. Node-postgres documents that URL SSL
@@ -111,23 +173,40 @@ endpoint. Tiger recommends its PgBouncer pooler for many short-lived connections
 (serverless and event-driven clients). If the app moves to that model, add a
 pooler in Tiger Console (Operations → Connection pooling) and use the transaction
 pool connection string it shows (database `tsdb_transaction`). The service has
-`max_connections = 105`, so budget the sum of pools across processes and replicas.
+`max_connections = 200`, so budget the sum of pools across processes and replicas
+(today: `web` and `speech`, 5 each). The app pool sets `allowExitOnIdle` so an idle
+pool never holds a script or test process open.
 Imports and DDL must always use the direct endpoint.
 
 ## API
 
 `GET /api/reef-data?dataset=risk&year=2023&reef=4&page=1`
 
-- `dataset`: `risk` (default) or `stress`.
-- `year`: optional, limited to the dataset's period.
-- `reef`: optional positive integer source reef ID.
-- `page`: 1–1000. Page size is fixed at 50, in stable order year/reef/source_row.
+- `dataset`: `risk` (default), `stress`, `history`, `forecast` or `validation`.
+- `year`: optional, limited to the dataset's period; not accepted for `validation`.
+- `reef`: optional positive integer source reef ID; not accepted for `validation`.
+- `page`: 1 to the dataset's last page. Page size is fixed at 50, in stable order
+  year/reef/source_row (`validation`: source_row).
 - Invalid, repeated and unknown filters return 400. Database failures return a
   generic 503 (`no-store`, `Retry-After: 30`) with no connection details and no
   mock data.
 - Successful responses can be cached 60 s by browsers and 300 s by a shared
   cache. All values are parameterized. Table, view and column names come only
   from the fixed allowlist.
+
+App data routes (same caching and 503 policy; each server process also keeps a
+read for five minutes):
+
+- `GET /api/atlas/florida`: the Florida bundle, shaped exactly like the former
+  `src/data/{sites,thermal,storms,lionfish,simulated,meta}.json`.
+- `GET /api/atlas/documents/{group}/{name}`: one document's stored text; ids come
+  from the allowlist in `atlas.mjs`, anything else is 404.
+- `GET /api/atlas/world`: every reef with its latest survey year and survey count,
+  and the years each heat dataset covers.
+- `GET /api/atlas/heat?year=YYYY` (1985–2031): peak DHW per reef for one year with
+  a summary computed in SQL; forecast years add p10/p90, P(DHW ≥ 8) and the
+  model's back-tested skill beside the `baseline_last10` row. 2003 and 2026 are
+  404: the supplied data does not cover them.
 
 ## Production checklist (Tiger Cloud Console)
 
@@ -137,12 +216,34 @@ Imports and DDL must always use the direct endpoint.
   a restore. Check the service's HA replica setting in Console (Tiger fails over
   to an HA replica within about 30 s). This change enables nothing paid.
 - **Monitoring:** watch connections against `max_connections`, CPU and memory
-  (the service is 0.5 CPU / 2 GB), storage, and slow queries.
+  (the service is 4 CPU / 16 GB), storage, and slow queries.
 - `/api/health` checks process liveness only. Monitor `/api/reef-data?reef=4`
   separately for dataset readiness, so a database outage never triggers a
   container restart loop.
 - **Agents:** the Tiger CLI/MCP is configured `read_only = prod`. Tag the
   production service `PROD` to put agent sessions in read-only mode.
+
+## Moving the app data into Tiger (run 2026-09-27 against `db-49612`)
+
+Files were deleted from the repository only after Tiger reproduced each one:
+
+- `pnpm db:import --dry-run`, then `pnpm db:import`: migrations 002 and 003 applied;
+  the three heat CSVs imported; all five CSVs rebuilt from their views with SHA-256
+  identical to the pinned hashes.
+- `import-atlas.mjs --from src/data`: all 13 datasets read back byte-identical to
+  their files (6 Florida datasets rebuilt from 8,401 relational rows, 7 documents).
+- `pnpm db:verify` (read-only) and `--export` to a scratch directory: all 18 files
+  written back out of Tiger compared equal with `cmp` / `shasum`.
+- As `reef_atlas_reader`: every new table readable, writes rejected (SQLSTATE 25006).
+- `global-reefs.json` (derived) rebuilt from Tiger with its old build algorithm:
+  identical. The world layer now queries `heat_history` / `heat_forecast` instead.
+- The voice agent's old JSON tools against the new SQL tools
+  (`src/server/reef/tigerReefData.ts`): 649 of 649 results identical over every
+  site, nine date ranges and every tool; invalid dates such as 2023-02-30 are
+  rejected before reaching SQL.
+- `pnpm test:db`, `pnpm test:voice`, `pnpm typecheck`, `pnpm lint`, `pnpm build`
+  pass; the experience, a flagship dossier, the Florida reef scene, the Soneva
+  3D survey and the explorer were checked in a browser against Tiger.
 
 ## Verification (run 2026-09-26 against `db-49612`)
 

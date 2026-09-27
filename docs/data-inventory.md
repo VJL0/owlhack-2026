@@ -27,7 +27,7 @@ presented as field observations.
 | Soneva Fushi | wildflow/soneva-corals | field (3D) | Jun 2025 – Mar 2026 | Hugging Face, pinned revision | CC BY 4.0 |
 | all three | NOAA Coral Reef Watch 5 km v3.1 | satellite | 2002 – Sep 2026, weekly samples | NOAA CoastWatch ERDDAP | free with credit |
 | all three | NOAA NCEI IBTrACS v04r01 | track | 1985–2026 | NCEI CSV | public domain |
-| world view | supplied `bleaching_risk_2021_2025.csv`, `reef_stress_analysis.csv` | as supplied | 2013–2025 | repo files, Tiger Cloud | as supplied |
+| world view | supplied heat history and forecast, `bleaching_risk_2021_2025.csv`, `reef_stress_analysis.csv` | as supplied | 1985–2031 | Tiger Cloud only | as supplied |
 | Florida | unchanged, see README section 1 | | 2016–2024 | | |
 
 ## Moorea, French Polynesia (Moorea Coral Reef LTER)
@@ -163,8 +163,10 @@ temperature, colours vary with light and visibility.
 
 ## World view: the supplied archive
 
-- `bleaching_risk_2021_2025.csv` (13,245 rows, 2,649 reefs, peak DHW and a model probability per year) and `reef_stress_analysis.csv` (5,294 survey rows 2013–2020, 2,720 reefs), SHA-256 pinned in `apps/web/database/datasets.mjs` and served from Tiger Cloud.
-- The globe colours each reef by that year's `peak_dhw`; the panel reports how many passed 8 °C-weeks and the median year of their last survey in the archive (surveys in this file end in 2020, which the panel says).
+- `heat_history_1985_2025.csv` (105,960 rows, 2,649 reefs, annual peak DHW labelled `observed` or `estimated`; no 2003 rows; 1985–2009 all estimated, 2021–2025 all observed and equal to the bleaching-risk file), `heat_forecast_2027_2031.csv` (13,245 rows, ridge model, horizon 1–5, 10th–90th percentiles, P(DHW ≥ 4) and P(DHW ≥ 8)), `heat_forecast_validation.csv` (20 rows: ridge, XGBoost and two baselines by horizon).
+- `bleaching_risk_2021_2025.csv` (13,245 rows, 2,649 reefs, peak DHW and a model probability per year) and `reef_stress_analysis.csv` (5,294 survey rows 2013–2020, 2,720 reefs).
+- All five are SHA-256 pinned in `apps/web/database/datasets.mjs`, live only in Tiger Cloud (schema `reef_data`), and can be written back out byte for byte with `pnpm db:export <dir>`.
+- The globe colours each reef by that year's peak DHW (history 1985–2025, forecast 2027–2031, with 2003 and 2026 shown as not covered); the panel reports how many passed 8 °C-weeks, the observed share for history years, the central estimate, even-chance count and back-tested error (beside a ten-year baseline) for forecast years, and the median year of the last survey in the archive (surveys end in 2020, which the panel says).
 - Provenance of the original surveys is not documented in the files.
 
 ## Global Fishing Watch

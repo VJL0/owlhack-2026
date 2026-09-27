@@ -110,7 +110,7 @@ export async function runTool(name: string, args: Args): Promise<unknown> {
         return { metric, from: f, to: t, ranking: rows.sort((x, y) => y.value - x.value) };
       }
       case "get_flagship_evidence":
-        return flagshipEvidence(args);
+        return await flagshipEvidence(args);
       default:
         return { error: `Unknown tool "${name}".` };
     }

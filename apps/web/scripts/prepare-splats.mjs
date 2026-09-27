@@ -9,7 +9,8 @@
 //        degree-0 colour only), about 7x smaller than the PLY
 //
 // Output: public/splats/soneva/<plot>/<date>-lod<N>.spz and a manifest in
-// src/data/flagships/soneva-splats.json. Source PLYs are cached in data/cache (ignored).
+// data/build/atlas/flagships/soneva-splats.json (loaded into Tiger by `pnpm db:atlas`).
+// Source PLYs are cached in data/cache (ignored).
 //
 // Run: node scripts/prepare-splats.mjs <plot> [lod=2]   e.g.  node scripts/prepare-splats.mjs ootsl1 2
 
@@ -25,7 +26,7 @@ const REV = "200aaf30cda920bd9b0e5d5da8838d4165c9e289";
 const HF = `https://huggingface.co/datasets/wildflow/soneva-corals/resolve/${REV}`;
 const CACHE = path.join(ROOT, "data/cache/soneva");
 const OUT = path.resolve(here, "../public/splats/soneva");
-const MANIFEST = path.resolve(here, "../src/data/flagships/soneva-splats.json");
+const MANIFEST = path.join(ROOT, "data/build/atlas/flagships/soneva-splats.json");
 
 const plot = process.argv[2];
 const lod = Number(process.argv[3] ?? 2);
@@ -165,5 +166,6 @@ for (const { survey, ply } of plies) {
   console.log(`${survey} lod${lod}: ${ply.n} -> ${count} splats, ${(bytes.length / 1e6).toFixed(2)} MB`);
 }
 manifest.plots[plot] = { frame: { origin: frame.origin, box: frame.box, up: "+z", units: "m" }, surveys: entries };
+fs.mkdirSync(path.dirname(MANIFEST), { recursive: true });
 fs.mkdirSync(path.dirname(MANIFEST), { recursive: true });
 fs.writeFileSync(MANIFEST, JSON.stringify(manifest, null, 2) + "\n");

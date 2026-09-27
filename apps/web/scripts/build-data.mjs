@@ -6,7 +6,8 @@
 //   simulated – AIS fishing / vessel / SAR activity (Global Fishing Watch is not
 //               wired yet); seeded so the demo is deterministic
 //
-// Output: src/data/*.json (committed, so the app runs offline).
+// Output: data/build/atlas/*.json at the repo root (ignored by Git). The app reads
+// Tiger Cloud, not these files: load them with `pnpm db:atlas`.
 // Run: node scripts/build-data.mjs
 
 import fs from "node:fs";
@@ -15,7 +16,7 @@ import { fileURLToPath } from "node:url";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const RAW = path.resolve(here, "../../../data/raw");
-const OUT = path.resolve(here, "../src/data");
+const OUT = path.resolve(here, "../../../data/build/atlas");
 fs.mkdirSync(OUT, { recursive: true });
 
 const EPOCH = Date.UTC(2016, 0, 1);
