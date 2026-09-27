@@ -5,15 +5,20 @@ import { AnimatePresence, motion } from "motion/react";
 import { type Change, type Dossier as DossierData, type Presence } from "@/lib/flagships";
 import { loadDossier } from "@/lib/atlasClient";
 import { useStore } from "@/lib/store";
-import { SPRING } from "@/lib/ui";
+import { COMPACT, SPRING, useMedia } from "@/lib/ui";
 import EvidenceTag from "./EvidenceTag";
 import EvidenceTimeline from "./EvidenceTimeline";
 import Bleaching2019 from "./Bleaching2019";
 import LagoonLegend from "./LagoonLegend";
 import DisturbanceLog from "./DisturbanceLog";
 import SonevaCard from "./SonevaCard";
+import SheetTabs, { tabPanel } from "./SheetTabs";
 
 const PRESENCE: Record<Presence, string> = { present: "present", absent: "not seen", "not measured": "not measured" };
+
+// On phones the dossier, its timeline and the flagship card share one sheet, one tab at a time.
+type View = "overview" | "timeline" | "side";
+const SIDE_TAB: Record<string, string> = { moorea: "Bleaching & heat", "lizard-island": "Causes", "soneva-fushi": "3D surveys" };
 
 function DriverTable({ c }: { c: Change }) {
   return (
@@ -86,6 +91,8 @@ export default function Dossier() {
   const [d, setD] = useState<DossierData | null>(null);
   const [failed, setFailed] = useState<string | null>(null);
   const [change, setChange] = useState<Change | null>(null);
+  const [view, setView] = useState<View>("overview");
+  const compact = useMedia(COMPACT);
   const [evidenceH, setEvidenceH] = useState(320);
   const evidenceRef = useRef<HTMLDivElement>(null);
 
@@ -106,6 +113,7 @@ export default function Dossier() {
         if (!live) return;
         setD(x);
         setChange(null);
+        setView("overview");
         setFailed(null);
       },
       () => live && setFailed(id),
@@ -128,104 +136,122 @@ export default function Dossier() {
       <button className="btn-instrument dz-back" onClick={() => useStore.getState().setPhase("world")}>
         Back to the world <span className="kbd">Esc</span>
       </button>
-      <motion.aside
-        className="dossier"
-        aria-label={`${d.name} evidence dossier`}
-        initial={{ opacity: 0, transform: "translateX(-16px)" }}
-        animate={{ opacity: 1, transform: "translateX(0px)" }}
-        transition={SPRING}
-      >
-        <header className="dz-head">
-          <p className="dz-role">{d.role}</p>
-          <h2>{d.name}</h2>
-          <p className="dz-place">
-            {d.place} · {Math.abs(d.lat).toFixed(2)}° {d.lat < 0 ? "S" : "N"}, {Math.abs(d.lon).toFixed(2)}° {d.lon < 0 ? "W" : "E"}
-          </p>
-          <p className="dz-question">{d.question}</p>
-          <p className="dz-summary">{d.summary}</p>
-          <dl className="dz-stats">
-            {d.stats.map((s) => (
-              <div key={s.label}>
-                <dt>{s.label}</dt>
-                <dd>{s.value}</dd>
-              </div>
-            ))}
-          </dl>
-        </header>
-
-        <Changes d={d} selected={change} onSelect={setChange} />
-
-        <section className="dz-section">
-          <h3>What is missing</h3>
-          <ul className="dz-list">
-            {d.missing.map((m) => (
-              <li key={m.title}>
-                <b>{m.title}</b>
-                <span>{m.detail}</span>
-              </li>
-            ))}
-          </ul>
-        </section>
-
-        <section className="dz-section">
-          <h3>Why look again</h3>
-          <ul className="dz-list">
-            {d.next.map((m) => (
-              <li key={m.title}>
-                <b>{m.title}</b>
-                <span>
-                  {m.detail} <EvidenceTag kind={m.evidence} compact />
-                </span>
-              </li>
-            ))}
-          </ul>
-        </section>
-
-        <section className="dz-section">
-          <h3>Sources</h3>
-          <ul className="dz-sources">
-            {d.sources.map((s) => (
-              <li key={s.id}>
-                <a href={s.url} target="_blank" rel="noreferrer">
-                  {s.name}
-                </a>
-                <span>
-                  {s.provider} · {s.license}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </section>
-      </motion.aside>
-
-      <motion.div
-        className="dossier-side"
-        initial={{ opacity: 0, transform: "translateX(16px)" }}
-        animate={{ opacity: 1, transform: "translateX(0px)" }}
-        transition={{ ...SPRING, delay: 0.08 }}
-      >
-        {d.id === "moorea" && (
-          <>
-            <Bleaching2019 />
-            <LagoonLegend />
-          </>
+      <div className="dossier-sheet" data-view={view}>
+        {compact && (
+          <SheetTabs
+            id="dz"
+            label="Dossier sections"
+            tabs={[
+              ["overview", "Overview"],
+              ["timeline", "Timeline"],
+              ["side", SIDE_TAB[d.id] ?? "Details"],
+            ]}
+            view={view}
+            onView={setView}
+          />
         )}
-        {d.id === "lizard-island" && <DisturbanceLog d={d} />}
-        {d.id === "soneva-fushi" && <SonevaCard d={d} />}
-      </motion.div>
-
-      <AnimatePresence>
-        <motion.div
-          key={d.id}
-          ref={evidenceRef}
-          className="evidence-wrap"
-          initial={{ opacity: 0, transform: "translateY(20px)" }}
-          animate={{ opacity: 1, transform: "translateY(0px)" }}
-          transition={{ ...SPRING, delay: 0.12 }}
+        <motion.aside
+          className="dossier"
+          aria-label={`${d.name} evidence dossier`}
+          {...tabPanel("dz", "overview", compact)}
+          initial={{ opacity: 0, transform: "translateX(-16px)" }}
+          animate={{ opacity: 1, transform: "translateX(0px)" }}
+          transition={SPRING}
         >
-          <EvidenceTimeline d={d} change={change} onPickChange={setChange} />
+          <header className="dz-head">
+            <p className="dz-role">{d.role}</p>
+            <h2>{d.name}</h2>
+            <p className="dz-place">
+              {d.place} · {Math.abs(d.lat).toFixed(2)}° {d.lat < 0 ? "S" : "N"}, {Math.abs(d.lon).toFixed(2)}° {d.lon < 0 ? "W" : "E"}
+            </p>
+            <p className="dz-question">{d.question}</p>
+            <p className="dz-summary">{d.summary}</p>
+            <dl className="dz-stats">
+              {d.stats.map((s) => (
+                <div key={s.label}>
+                  <dt>{s.label}</dt>
+                  <dd>{s.value}</dd>
+                </div>
+              ))}
+            </dl>
+          </header>
+
+          <Changes d={d} selected={change} onSelect={setChange} />
+
+          <section className="dz-section">
+            <h3>What is missing</h3>
+            <ul className="dz-list">
+              {d.missing.map((m) => (
+                <li key={m.title}>
+                  <b>{m.title}</b>
+                  <span>{m.detail}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
+
+          <section className="dz-section">
+            <h3>Why look again</h3>
+            <ul className="dz-list">
+              {d.next.map((m) => (
+                <li key={m.title}>
+                  <b>{m.title}</b>
+                  <span>
+                    {m.detail} <EvidenceTag kind={m.evidence} compact />
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </section>
+
+          <section className="dz-section">
+            <h3>Sources</h3>
+            <ul className="dz-sources">
+              {d.sources.map((s) => (
+                <li key={s.id}>
+                  <a href={s.url} target="_blank" rel="noreferrer">
+                    {s.name}
+                  </a>
+                  <span>
+                    {s.provider} · {s.license}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        </motion.aside>
+
+        <motion.div
+          className="dossier-side"
+          {...tabPanel("dz", "side", compact)}
+          initial={{ opacity: 0, transform: "translateX(16px)" }}
+          animate={{ opacity: 1, transform: "translateX(0px)" }}
+          transition={{ ...SPRING, delay: 0.08 }}
+        >
+          {d.id === "moorea" && (
+            <>
+              <Bleaching2019 />
+              <LagoonLegend />
+            </>
+          )}
+          {d.id === "lizard-island" && <DisturbanceLog d={d} />}
+          {d.id === "soneva-fushi" && <SonevaCard d={d} />}
         </motion.div>
-      </AnimatePresence>
+
+        <AnimatePresence>
+          <motion.div
+            key={d.id}
+            ref={evidenceRef}
+            className="evidence-wrap"
+            {...tabPanel("dz", "timeline", compact)}
+            initial={{ opacity: 0, transform: "translateY(20px)" }}
+            animate={{ opacity: 1, transform: "translateY(0px)" }}
+            transition={{ ...SPRING, delay: 0.12 }}
+          >
+            <EvidenceTimeline d={d} change={change} onPickChange={setChange} />
+          </motion.div>
+        </AnimatePresence>
+      </div>
     </div>
   );
 }

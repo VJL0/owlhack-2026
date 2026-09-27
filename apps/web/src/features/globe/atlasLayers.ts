@@ -5,6 +5,7 @@ import type { Dossier } from "@/lib/flagships";
 import { fetchDocument, fetchHeat, fetchWorld, loadDossier } from "@/lib/atlasClient";
 import { heatRgb, lagoonTempRgb as tempRgb } from "@/lib/colors";
 import { useStore } from "@/lib/store";
+import { COMPACT } from "@/lib/ui";
 
 type Store = typeof useStore;
 
@@ -33,6 +34,8 @@ export function addFlagshipMarkers(C: Cesium, viewer: CesiumNS.Viewer, store: St
   const camera = viewer.scene.camera;
   const toCam = new C.Cartesian3();
   const sans = getComputedStyle(document.documentElement).getPropertyValue("--font-geist").trim() || "system-ui";
+  // Phones: names only (the roles are in the sheet below), so neighbouring labels stay apart
+  const compact = window.matchMedia(COMPACT);
   for (const f of FLAGSHIPS) {
     const hot = () => store.getState().flagshipHover === f.id;
     const pos = C.Cartesian3.fromDegrees(f.lon, f.lat, 50);
@@ -48,7 +51,7 @@ export function addFlagshipMarkers(C: Cesium, viewer: CesiumNS.Viewer, store: St
         disableDepthTestDistance: Number.POSITIVE_INFINITY,
       },
       label: {
-        text: `${f.name}\n${f.role}`,
+        text: new C.CallbackProperty(() => (compact.matches ? f.name : `${f.name}\n${f.role}`), false),
         font: `500 15px ${sans}`,
         fillColor: C.Color.fromCssColorString("#f5f5f7"),
         outlineColor: C.Color.fromCssColorString("#010a12"),

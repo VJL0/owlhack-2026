@@ -10,6 +10,7 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
+    "mobile:check": "node scripts/mobile-check.mjs",
     "data": "node scripts/build-data.mjs",
     "data:fetch": "node scripts/fetch-flagships.mjs",
     "data:splats": "node scripts/prepare-splats.mjs ootsl1 2 && node scripts/prepare-splats.mjs hb 2 && node scripts/analyze-soneva.mjs",
@@ -57,6 +58,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.3.6",
     "pg-copy-streams": "^7.0.0",
+    "playwright-core": "^1.63.0",
     "tailwindcss": "^4",
     "tsx": "^4.23.15",
     "typescript": "^5"

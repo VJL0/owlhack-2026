@@ -8,6 +8,12 @@ import { murAnomalyDate } from "@/lib/gibs";
 import { FLAGSHIPS, flagshipById } from "@/lib/flagshipIndex";
 import { addFlagshipDetail, addFlagshipMarkers, addGlobalReefs } from "./atlasLayers";
 
+// Phone sheets (atlas.css, compact screens): along the bottom in portrait, a left column in landscape.
+const SHEET_BELOW = "(max-width: 900px) and (orientation: portrait)";
+const SHEET_LEFT = "(orientation: landscape) and (max-width: 900px), (orientation: landscape) and (max-height: 500px)";
+// Landscape phones (interface.css): region controls along the top, timeline on the left half.
+const SHORT_LANDSCAPE = "(orientation: landscape) and (max-height: 500px)";
+
 type View = { lon: number; lat: number; h: number; heading: number; pitch: number };
 
 // Camera stations for the opening flight (degrees / metres).
@@ -556,13 +562,35 @@ export function createGlobe(C: Cesium, container: HTMLElement): GlobeController 
 
   // ------------------------------------------------------------ camera choreography
   // Portrait screens get a taller, steeper framing of the reef arc (no horizon).
-  const regionView = (): View =>
-    container.clientWidth / Math.max(1, container.clientHeight) < 0.9
-      ? { lon: -81.45, lat: 23.55, h: 560_000, heading: 0, pitch: -78 }
-      : VIEWS.region;
+  // Portrait phones look further down, lifting the arc above the layers, sites and timeline,
+  // a little east (the site names run east of their dots) and higher on narrower screens
+  // (tuned at 393 × 659). Landscape phones turn the arc to lie in the open lower right,
+  // between the top controls and the timeline.
+  const regionView = (): View => {
+    const aspect = container.clientWidth / Math.max(1, container.clientHeight);
+    if (matchMedia(SHORT_LANDSCAPE).matches) return { lon: -82.3, lat: 23.62, h: 740_000, heading: -30, pitch: -79 };
+    if (aspect >= 0.9) return VIEWS.region;
+    if (matchMedia(SHEET_BELOW).matches) return { lon: -81.05, lat: 23.55, h: 560_000 * Math.max(1, 0.6 / aspect), heading: 0, pitch: -87 };
+    return { lon: -81.45, lat: 23.55, h: 560_000, heading: 0, pitch: -78 };
+  };
   const dest = (v: View) => C.Cartesian3.fromDegrees(v.lon, v.lat, v.h);
   const orient = (v: View) => ({ heading: C.Math.toRadians(v.heading), pitch: C.Math.toRadians(v.pitch), roll: 0 });
   const setView = (v: View) => camera.setView({ destination: dest(v), orientation: orient(v) });
+  const sheet = () => (matchMedia(SHEET_BELOW).matches ? "below" : matchMedia(SHEET_LEFT).matches ? "left" : null);
+
+  // With a phone sheet over part of the screen, turn the camera so the view's centre
+  // lands in the open part: up by `up`, right by `right` (fractions of the screen).
+  // A camera turn rather than a frustum offset, which Cesium measures in near-plane
+  // units that change from frame to frame.
+  const aim = new C.Camera(scene);
+  const framed = (v: View, up: number, right: number) => {
+    aim.setView({ destination: dest(v), orientation: orient(v) });
+    const tanHalfY = Math.tan(((camera.frustum as CesiumNS.PerspectiveFrustum).fovy ?? C.Math.toRadians(60)) / 2);
+    const aspect = container.clientWidth / Math.max(1, container.clientHeight);
+    aim.lookDown(Math.atan(2 * up * tanHalfY));
+    aim.lookLeft(Math.atan(2 * right * tanHalfY * aspect));
+    return { destination: aim.position.clone(), orientation: { direction: aim.direction.clone(), up: aim.up.clone() } };
+  };
   const fly = (v: View, duration: number, easing = C.EasingFunction.QUADRATIC_IN_OUT, extra: Partial<Parameters<typeof camera.flyTo>[0]> = {}) =>
     new Promise<boolean>((resolve) =>
       camera.flyTo({
@@ -647,9 +675,11 @@ export function createGlobe(C: Cesium, container: HTMLElement): GlobeController 
     const fovy = (camera.frustum as CesiumNS.PerspectiveFrustum).fovy ?? C.Math.toRadians(60);
     const viewH = 2 * st.range * Math.tan(fovy / 2);
     const wide = aspect > 1.1 && container.clientWidth > 900;
-    // the open area sits between the dossier (left) and the side cards (right), above the timeline
-    const sx = wide ? 0.01 * viewH * aspect : 0;
-    const sy = wide ? 0.21 * viewH : 0.18 * viewH;
+    const phone = sheet();
+    // the open area sits between the dossier (left) and the side cards (right), above the timeline;
+    // on phones above the sheet (portrait, 52svh) or right of it (landscape, about half the width)
+    const sx = phone === "left" ? 0.26 * viewH * aspect : wide ? 0.01 * viewH * aspect : 0;
+    const sy = phone === "left" ? 0 : phone === "below" ? 0.23 * viewH : wide ? 0.21 * viewH : 0.18 * viewH;
     const local = C.Cartesian3.multiplyByScalar(fwd, -st.range, new C.Cartesian3());
     C.Cartesian3.subtract(local, C.Cartesian3.multiplyByScalar(right, sx, new C.Cartesian3()), local);
     C.Cartesian3.subtract(local, C.Cartesian3.multiplyByScalar(up, sy, new C.Cartesian3()), local);
@@ -667,8 +697,9 @@ export function createGlobe(C: Cesium, container: HTMLElement): GlobeController 
     const hover = store.getState().flagshipHover;
     const f = hover ? flagshipById(hover) : null;
     const portrait = container.clientWidth / Math.max(1, container.clientHeight) < 0.9;
-    const base = f ? { ...VIEWS.world, lon: f.lon + (portrait ? 0 : 28), lat: f.lat * 0.6 } : VIEWS.world;
-    return portrait ? { ...base, h: 26_000_000 } : base;
+    const base = f ? { ...VIEWS.world, lon: f.lon + (portrait || sheet() ? 0 : 28), lat: f.lat * 0.6 } : VIEWS.world;
+    // further out where a sheet leaves the globe half the screen
+    return portrait || sheet() ? { ...base, h: 26_000_000 } : base;
   };
 
   const flyToWorld = async (instant = false) => {
@@ -680,8 +711,14 @@ export function createGlobe(C: Cesium, container: HTMLElement): GlobeController 
     setInputs(false);
     const v = worldView();
     sunOver(v.lon - 28, instant);
-    if (instant || store.getState().reducedMotion) setView(v);
-    else await fly(v, 3.2, C.EasingFunction.QUADRATIC_IN_OUT);
+    // Portrait sheet: 50svh from the bottom, so the open top half is centred ~22% above the middle.
+    // Landscape sheet: the left 52%, so the open right part is centred ~26% right of the middle.
+    const to = framed(v, sheet() === "below" ? 0.22 : 0, sheet() === "left" ? 0.26 : 0);
+    if (instant || store.getState().reducedMotion) camera.setView(to);
+    else
+      await new Promise<boolean>((resolve) =>
+        camera.flyTo({ ...to, duration: 3.2, easingFunction: C.EasingFunction.QUADRATIC_IN_OUT, complete: () => resolve(true), cancel: () => resolve(false) }),
+      );
     if (token !== flightToken) return;
     setInputs(true);
   };

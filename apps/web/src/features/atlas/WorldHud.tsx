@@ -5,7 +5,9 @@ import Link from "next/link";
 import { FLAGSHIPS } from "@/lib/flagshipIndex";
 import { HEAT_STOPS } from "@/lib/colors";
 import { useStore } from "@/lib/store";
+import { COMPACT, useMedia } from "@/lib/ui";
 import EvidenceTag from "./EvidenceTag";
+import SheetTabs, { tabPanel } from "./SheetTabs";
 import { FORECAST_YEARS, HISTORY_YEARS, fetchHeat, isForecastYear, type HeatYear } from "@/lib/atlasClient";
 
 type Heat = HeatYear | null | "error";
@@ -100,93 +102,110 @@ export default function WorldHud() {
   const setYear = useStore((s) => s.setWorldYear);
   const heat = useHeat(year);
   const forecast = isForecastYear(year);
+  // On phones the flagship list and the heat layer share one sheet
+  const [view, setView] = useState<"reefs" | "heat">("reefs");
+  const compact = useMedia(COMPACT);
 
   return (
     <div className="hud">
-      <aside className="world-panel" aria-label="Flagship reefs">
-        <header className="world-title">
-          <h2>Reefs change between looks</h2>
-          <p>
-            Most reefs are surveyed every few years while heat, starfish, storms and fishing overlap in between. These four places have records long enough to
-            reconstruct what happened.
-          </p>
-        </header>
-        <nav className="flagship-list">
-          {FLAGSHIPS.map((f) => (
-            <button
-              key={f.id}
-              className="flagship-row"
-              data-active={hover === f.id}
-              onMouseEnter={() => setHover(f.id)}
-              onFocus={() => setHover(f.id)}
-              onMouseLeave={() => setHover(null)}
-              onClick={() => {
-                setHover(null);
-                if (f.id === "florida") setPhase("flying");
-                else openFlagship(f.id);
-              }}
-            >
-              <span className="fr-role">{f.role}</span>
-              <span className="fr-name">
-                {f.name} <em>{f.place}</em>
-              </span>
-              <span className="fr-blurb">{f.blurb}</span>
-              <span className="fr-record">{f.record}</span>
-            </button>
-          ))}
-        </nav>
-      </aside>
-
-      <section className="world-heat" aria-label="Global heat stress layer">
-        <header>
-          <h3>Peak heat stress, {year}</h3>
-          {heat && heat !== "error" && heat !== "missing" && (
-            <EvidenceTag kind={heat.kind === "forecast" ? "model" : heat.stats.observed === 0 ? "estimated" : "satellite"} />
-          )}
-        </header>
-        <div className="wh-slider">
-          <button type="button" aria-label="Previous year" onClick={() => setYear(year - 1)} disabled={year <= SPAN}>
-            ‹
-          </button>
-          <input
-            type="range"
-            min={SPAN}
-            max={LAST}
-            step={1}
-            value={year}
-            onChange={(e) => setYear(Number(e.target.value))}
-            aria-label="Year"
-            aria-valuetext={forecast ? `${year}, forecast` : String(year)}
-            style={TRACK}
+      <div className="world-sheet" data-view={view}>
+        {compact && (
+          <SheetTabs
+            id="world"
+            label="World sections"
+            tabs={[
+              ["reefs", "Flagship reefs"],
+              ["heat", "Heat by year"],
+            ]}
+            view={view}
+            onView={setView}
           />
-          <button type="button" aria-label="Next year" onClick={() => setYear(year + 1)} disabled={year >= LAST}>
-            ›
-          </button>
-        </div>
-        <div className="wh-ticks" aria-hidden="true">
-          <em style={{ left: at(SPAN) }}>{SPAN}</em>
-          <em style={{ left: at(2000) }}>2000</em>
-          <em style={{ left: at(2015) }}>2015</em>
-          <em style={{ left: at(LAST) }}>forecast</em>
-        </div>
-        <div className="wh-ramp" aria-hidden="true">
-          <span style={{ background: `linear-gradient(90deg, ${HEAT_STOPS.map(([v, c]) => `${c} ${(v / 20) * 100}%`).join(",")})` }} />
-          <div>
-            <em>0</em>
-            <em style={{ left: "20%" }}>4</em>
-            <em style={{ left: "40%" }}>8</em>
-            <em style={{ left: "60%" }}>12</em>
-            <em style={{ left: "80%" }}>16</em>
-            <em style={{ left: "100%" }}>20</em>
+        )}
+        <aside className="world-panel" aria-label="Flagship reefs" {...tabPanel("world", "reefs", compact)}>
+          <header className="world-title">
+            <h2>Reefs change between looks</h2>
+            <p>
+              Most reefs are surveyed every few years while heat, starfish, storms and fishing overlap in between. These four places have records long enough to
+              reconstruct what happened.
+            </p>
+          </header>
+          <nav className="flagship-list">
+            {FLAGSHIPS.map((f) => (
+              <button
+                key={f.id}
+                className="flagship-row"
+                data-active={hover === f.id}
+                onMouseEnter={() => setHover(f.id)}
+                onFocus={() => setHover(f.id)}
+                onMouseLeave={() => setHover(null)}
+                onClick={() => {
+                  setHover(null);
+                  if (f.id === "florida") setPhase("flying");
+                  else openFlagship(f.id);
+                }}
+              >
+                <span className="fr-role">{f.role}</span>
+                <span className="fr-name">
+                  {f.name} <em>{f.place}</em>
+                </span>
+                <span className="fr-blurb">{f.blurb}</span>
+                <span className="fr-record">{f.record}</span>
+              </button>
+            ))}
+          </nav>
+        </aside>
+
+        <section className="world-heat" aria-label="Global heat stress layer" {...tabPanel("world", "heat", compact)}>
+          <header>
+            <h3>Peak heat stress, {year}</h3>
+            {heat && heat !== "error" && heat !== "missing" && (
+              <EvidenceTag kind={heat.kind === "forecast" ? "model" : heat.stats.observed === 0 ? "estimated" : "satellite"} />
+            )}
+          </header>
+          <div className="wh-slider">
+            <button type="button" aria-label="Previous year" onClick={() => setYear(year - 1)} disabled={year <= SPAN}>
+              ‹
+            </button>
+            <input
+              type="range"
+              min={SPAN}
+              max={LAST}
+              step={1}
+              value={year}
+              onChange={(e) => setYear(Number(e.target.value))}
+              aria-label="Year"
+              aria-valuetext={forecast ? `${year}, forecast` : String(year)}
+              style={TRACK}
+            />
+            <button type="button" aria-label="Next year" onClick={() => setYear(year + 1)} disabled={year >= LAST}>
+              ›
+            </button>
           </div>
-          <p className="wh-unit">peak degree heating weeks (°C-weeks){forecast ? ", model forecast" : ""}</p>
-        </div>
-        <HeatSummary year={year} heat={heat} />
-        <p className="side-note">
-          2,720 reefs from the supplied archive (surveys end in 2020): heat history 1985–2025 and forecast 2027–2031, served from Tiger Cloud.{" "}
-          <Link href="/data?dataset=history">Explore the records</Link>.
-        </p>
-      </section>
+          <div className="wh-ticks" aria-hidden="true">
+            <em style={{ left: at(SPAN) }}>{SPAN}</em>
+            <em style={{ left: at(2000) }}>2000</em>
+            <em style={{ left: at(2015) }}>2015</em>
+            <em style={{ left: at(LAST) }}>forecast</em>
+          </div>
+          <div className="wh-ramp" aria-hidden="true">
+            <span style={{ background: `linear-gradient(90deg, ${HEAT_STOPS.map(([v, c]) => `${c} ${(v / 20) * 100}%`).join(",")})` }} />
+            <div>
+              <em>0</em>
+              <em style={{ left: "20%" }}>4</em>
+              <em style={{ left: "40%" }}>8</em>
+              <em style={{ left: "60%" }}>12</em>
+              <em style={{ left: "80%" }}>16</em>
+              <em style={{ left: "100%" }}>20</em>
+            </div>
+            <p className="wh-unit">peak degree heating weeks (°C-weeks){forecast ? ", model forecast" : ""}</p>
+          </div>
+          <HeatSummary year={year} heat={heat} />
+          <p className="side-note">
+            2,720 reefs from the supplied archive (surveys end in 2020): heat history 1985–2025 and forecast 2027–2031, served from Tiger Cloud.{" "}
+            <Link href="/data?dataset=history">Explore the records</Link>.
+          </p>
+        </section>
+      </div>
     </div>
   );
 }

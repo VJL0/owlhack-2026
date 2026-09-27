@@ -46,6 +46,19 @@ body {
   overscroll-behavior: none;
 }
 
+html {
+  /* no font inflation when a phone turns to landscape */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  /* every control has its own :active state */
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* taps fire at once: no wait for a double-tap zoom */
+:is(button, a, label, [role="switch"]) {
+  touch-action: manipulation;
+}
+
 body {
   font-family: var(--serif);
   font-size: 16px;
@@ -122,9 +135,10 @@ body {
     linear-gradient(to top, rgba(1, 10, 18, 0.85), transparent 26%);
 }
 
+/* The scene runs under the notch and home indicator (viewport-fit=cover); the HUD stays in the safe area */
 .hud {
   position: absolute;
-  inset: 0;
+  inset: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
   pointer-events: none;
   z-index: 10;
 }
@@ -136,8 +150,8 @@ body {
 /* ------------------------------------------------------------------ wordmark */
 .wordmark {
   position: absolute;
-  top: var(--gutter);
-  left: var(--gutter);
+  top: calc(var(--gutter) + env(safe-area-inset-top, 0px));
+  left: calc(var(--gutter) + env(safe-area-inset-left, 0px));
   font-family: var(--serif);
   font-weight: 300;
   font-size: 13px;
@@ -326,7 +340,7 @@ body {
   position: absolute;
   left: var(--gutter);
   bottom: calc(var(--timeline-h, 0px) + var(--gutter) + 18px);
-  max-width: min(46ch, calc(100vw - 2 * var(--gutter)));
+  max-width: min(46ch, calc(100% - 2 * var(--gutter)));
   padding-left: 18px;
   border-left: 1px solid var(--lumen);
   font-family: var(--serif);
@@ -668,8 +682,8 @@ body {
   position: absolute;
   right: var(--gutter);
   top: calc(var(--gutter) + 40px);
-  width: min(23rem, calc(100vw - 2 * var(--gutter)));
-  max-height: calc(100vh - var(--timeline-h, 0px) - 2 * var(--gutter) - 40px - 68px);
+  width: min(23rem, calc(100% - 2 * var(--gutter)));
+  max-height: calc(100% - var(--timeline-h, 0px) - 2 * var(--gutter) - 40px - 68px);
   overflow: auto;
   scrollbar-width: thin;
   padding: 22px 22px 20px;
@@ -1110,7 +1124,7 @@ body {
 }
 
 /* ------------------------------------------------------------------ responsive */
-@media (max-width: 860px) {
+@media (max-width: 860px), (max-height: 500px) {
   .region-panel {
     width: auto;
     right: var(--gutter);
@@ -1166,7 +1180,7 @@ body {
   .slate {
     top: auto;
     bottom: calc(var(--timeline-h, 0px) + var(--gutter) + 50px);
-    max-height: 55vh;
+    max-height: 55svh;
   }
   .gauges {
     width: auto;
@@ -1280,7 +1294,7 @@ body {
 }
 
 /* narrow screens: overrides for components defined above */
-@media (max-width: 860px) {
+@media (max-width: 860px), (max-height: 500px) {
   .pressure-index {
     left: var(--gutter);
     right: var(--gutter);
@@ -1342,7 +1356,7 @@ body {
 }
 
 .voice-card {
-  width: min(30rem, calc(100vw - 2 * var(--gutter)));
+  width: min(30rem, calc(100% - 2 * var(--gutter)));
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -1428,7 +1442,7 @@ body {
   font-size: 14.5px;
   line-height: 1.5;
   color: var(--bone);
-  max-height: 40vh;
+  max-height: 40svh;
   overflow: auto;
 }
 

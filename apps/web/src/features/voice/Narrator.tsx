@@ -6,7 +6,8 @@ import { siteById } from "@/lib/data";
 import { momentText } from "@/lib/narrative";
 import { dayToDate } from "@/lib/time";
 import type { Lang } from "@/lib/voiceActions";
-import { monthYear, STRINGS } from "./i18n";
+import { touchOnly } from "@/lib/ui";
+import { monthYear, strings } from "./i18n";
 import { speak } from "./speech";
 import { flagshipById } from "@/lib/flagshipIndex";
 
@@ -63,7 +64,7 @@ export default function Narrator() {
   useEffect(() => {
     if (!key || key === scene.current) return;
     scene.current = key;
-    const s = STRINGS[lang];
+    const s = strings(lang, touchOnly());
     const { t } = useStore.getState();
 
     const build = async () => {

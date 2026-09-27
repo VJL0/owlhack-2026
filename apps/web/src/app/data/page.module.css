@@ -20,3 +20,5 @@
 .tableWrap tr:hover { background: #a9d8d008; }
 .notice { border: 1px solid var(--coral); padding: 20px; margin-bottom: 24px; }
 .page footer { color: var(--aqua); font: 11px/1.8 var(--mono); overflow-wrap: anywhere; padding-bottom: 30px; }
+/* iOS Safari zooms the page into any focused field set under 16px */
+@media (pointer: coarse) { .filters select, .filters input { font-size: 16px; } }

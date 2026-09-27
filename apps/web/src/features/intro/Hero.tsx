@@ -3,7 +3,8 @@
 import { useSyncExternalStore } from "react";
 import { useStore } from "@/lib/store";
 import type { Lang } from "@/lib/voiceActions";
-import { browserLang, STRINGS } from "@/features/voice/i18n";
+import { useTouchOnly } from "@/lib/ui";
+import { browserLang, strings } from "@/features/voice/i18n";
 
 const TITLE = "REEF ATLAS";
 
@@ -57,7 +58,7 @@ const noSubscribe = () => () => {};
 function GuideButton({ onEnter }: { onEnter: (lang: Lang) => void }) {
   // English on the server, the browser's language on the client: no hydration mismatch.
   const lang = useSyncExternalStore(noSubscribe, browserLang, () => "en" as Lang);
-  const s = STRINGS[lang];
+  const s = strings(lang, useTouchOnly());
   return (
     <>
       <button className="btn-quiet btn-guide" onClick={() => onEnter(lang)} aria-describedby="guide-hint" lang={lang}>

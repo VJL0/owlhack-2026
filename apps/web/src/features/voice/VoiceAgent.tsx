@@ -5,7 +5,8 @@ import { useStore } from "@/lib/store";
 import { isoDate } from "@/lib/time";
 import { runAction } from "@/lib/navigation";
 import { MAP_LAYERS, type UiAction } from "@/lib/voiceActions";
-import { STRINGS } from "./i18n";
+import { useTouchOnly } from "@/lib/ui";
+import { strings } from "./i18n";
 import { ConversationProvider, useConversation } from "@elevenlabs/react";
 import { bindSpeech, stopSpeaking } from "./speech";
 
@@ -73,7 +74,8 @@ function VoicePanel() {
   /** Bumped on close/cancel so in-flight requests know to drop their result. */
   const runRef = useRef(0);
   const inputRef = useRef<HTMLInputElement>(null);
-  const t = STRINGS[lang];
+  const touch = useTouchOnly();
+  const t = strings(lang, touch);
 
   function releaseSession() {
     const key = keyRef.current;
@@ -290,7 +292,8 @@ function VoicePanel() {
           className="voice-pill"
           onClick={() => {
             setOpen(true);
-            requestAnimationFrame(() => inputRef.current?.focus());
+            // On touch screens focus would raise the keyboard over the suggestions
+            if (!touch) requestAnimationFrame(() => inputRef.current?.focus());
           }}
           aria-expanded={false}
         >
@@ -398,6 +401,7 @@ function VoicePanel() {
           onChange={(e) => setDraft(e.target.value)}
           placeholder={t.placeholder}
           aria-label={t.placeholder}
+          enterKeyHint="send"
           disabled={busy}
         />
       </form>

@@ -2,6 +2,7 @@ import { memo, useEffect, useMemo, useRef, useState } from "react";
 import type { Change, Dossier, Lane, TimelineEvent } from "@/lib/flagships";
 import { EVIDENCE_LABEL, formatYear } from "@/lib/flagships";
 import { useStore } from "@/lib/store";
+import { useTouchOnly } from "@/lib/ui";
 import EvidenceTag from "./EvidenceTag";
 
 const LABEL_W = 176;
@@ -9,6 +10,19 @@ const VALUE_W = 132;
 const LANE_H = 34;
 const AXIS_H = 20;
 const EVENT_H = 26;
+/** Below this width the lane names and readouts move onto a row above each lane. */
+const NARROW = 560;
+const HEAD_H = 30;
+
+/** Horizontal and vertical layout for a timeline this wide. */
+function geometry(w: number) {
+  const narrow = w < NARROW;
+  const labelW = narrow ? 0 : LABEL_W;
+  const plotW = Math.max(10, w - labelW - (narrow ? 0 : VALUE_W));
+  const head = narrow ? HEAD_H : 0;
+  return { narrow, labelW, plotW, head, step: LANE_H + head };
+}
+type Geometry = ReturnType<typeof geometry>;
 
 function useWidth<T extends HTMLElement>() {
   const ref = useRef<T>(null);
@@ -86,16 +100,17 @@ const EventMark = ({ e, x }: { e: TimelineEvent; x: number }) => {
 };
 
 /** Everything that does not follow the cursor. */
-const Plot = memo(function Plot({ d, w, x, change }: { d: Dossier; w: number; x: (t: number) => number; change: Change | null }) {
-  const plotW = w - LABEL_W - VALUE_W;
+const Plot = memo(function Plot({ d, geo, x, change }: { d: Dossier; geo: Geometry; x: (t: number) => number; change: Change | null }) {
+  const { plotW, labelW } = geo;
   const years = useMemo(() => {
     const [a, b] = d.span;
     const span = b - a;
-    const step = span > 30 ? 5 : span > 12 ? 2 : span > 4 ? 1 : 0.25;
+    // the finest step that keeps year labels at least 44 px apart
+    const step = [0.25, 1, 2, 5, 10].find((s) => s >= (span > 30 ? 5 : span > 12 ? 2 : span > 4 ? 1 : 0.25) && (plotW * s) / span >= 44) ?? 10;
     const out: number[] = [];
     for (let y = Math.ceil(a / step) * step; y <= b; y += step) out.push(Math.round(y * 100) / 100);
     return out;
-  }, [d.span]);
+  }, [d.span, plotW]);
   const events = d.events.filter((e) => e.kind !== "heat");
   const top = AXIS_H + EVENT_H;
 
@@ -104,7 +119,7 @@ const Plot = memo(function Plot({ d, w, x, change }: { d: Dossier; w: number; x:
       {/* year grid and axis */}
       {years.map((y) => (
         <g key={y}>
-          <line x1={x(y)} x2={x(y)} y1={AXIS_H - 4} y2={top + d.lanes.length * LANE_H} className="tl-grid" />
+          <line x1={x(y)} x2={x(y)} y1={AXIS_H - 4} y2={top + d.lanes.length * geo.step} className="tl-grid" />
           <text x={x(y)} y={12} className="tl-year" textAnchor="middle">
             {Number.isInteger(y) ? y : formatYear(y)}
           </text>
@@ -114,7 +129,7 @@ const Plot = memo(function Plot({ d, w, x, change }: { d: Dossier; w: number; x:
       {/* a selected change: the interval nobody observed between two surveys */}
       {change && (
         <g>
-          <rect x={x(change.t0)} y={AXIS_H} width={Math.max(2, x(change.t1) - x(change.t0))} height={EVENT_H + d.lanes.length * LANE_H} className="tl-change" />
+          <rect x={x(change.t0)} y={AXIS_H} width={Math.max(2, x(change.t1) - x(change.t0))} height={EVENT_H + d.lanes.length * geo.step} className="tl-change" />
           <text x={(x(change.t0) + x(change.t1)) / 2} y={AXIS_H + 9} textAnchor="middle" className="tl-change-label">
             not observed
           </text>
@@ -130,7 +145,7 @@ const Plot = memo(function Plot({ d, w, x, change }: { d: Dossier; w: number; x:
 
       {/* lanes */}
       {d.lanes.map((lane, li) => {
-        const y0 = top + li * LANE_H;
+        const y0 = top + li * geo.step + geo.head;
         const lo = lane.min ?? 0;
         const hi = lane.max;
         const y = (v: number) => y0 + LANE_H - 5 - ((Math.min(hi, Math.max(lo, v)) - lo) / (hi - lo)) * (LANE_H - 10);
@@ -138,7 +153,7 @@ const Plot = memo(function Plot({ d, w, x, change }: { d: Dossier; w: number; x:
         const gaps = d.gaps.filter((g) => !g.lane || g.lane === lane.id);
         return (
           <g key={lane.id}>
-            <line x1={0} x2={plotW} y1={y0 + LANE_H} y2={y0 + LANE_H} className="tl-lane-rule" transform={`translate(${LABEL_W} 0)`} />
+            <line x1={0} x2={plotW} y1={y0 + LANE_H} y2={y0 + LANE_H} className="tl-lane-rule" transform={`translate(${labelW} 0)`} />
             {gaps.map((g, i) => (
               <rect key={i} x={x(Math.max(d.span[0], g.t0))} y={y0 + 3} width={Math.max(1, x(Math.min(d.span[1], g.t1)) - x(Math.max(d.span[0], g.t0)))} height={LANE_H - 6} className="tl-gap">
                 <title>{g.label}</title>
@@ -146,7 +161,7 @@ const Plot = memo(function Plot({ d, w, x, change }: { d: Dossier; w: number; x:
             ))}
             {lane.refs?.map((r) => (
               <g key={r.v}>
-                <line x1={LABEL_W} x2={LABEL_W + plotW} y1={y(r.v)} y2={y(r.v)} className="tl-ref" />
+                <line x1={labelW} x2={labelW + plotW} y1={y(r.v)} y2={y(r.v)} className="tl-ref" />
               </g>
             ))}
             {lane.others?.map((o) => (
@@ -224,11 +239,13 @@ export default function EvidenceTimeline({ d, change, onPickChange }: { d: Dossi
   const setT = useStore((s) => s.setFlagshipT);
   const [hover, setHover] = useState<number | null>(null);
   const dragging = useRef(false);
-  const plotW = Math.max(10, w - LABEL_W - VALUE_W);
-  const x = useMemo(() => (tt: number) => LABEL_W + ((tt - d.span[0]) / (d.span[1] - d.span[0])) * plotW, [d.span, plotW]);
-  const fromX = (px: number) => d.span[0] + ((px - LABEL_W) / plotW) * (d.span[1] - d.span[0]);
+  const touch = useTouchOnly();
+  const g = useMemo(() => geometry(w), [w]);
+  const { labelW, plotW } = g;
+  const x = useMemo(() => (tt: number) => labelW + ((tt - d.span[0]) / (d.span[1] - d.span[0])) * plotW, [d.span, labelW, plotW]);
+  const fromX = (px: number) => d.span[0] + ((px - labelW) / plotW) * (d.span[1] - d.span[0]);
   const cursor = hover ?? t ?? d.span[1] - 0.001;
-  const height = AXIS_H + EVENT_H + d.lanes.length * LANE_H + 4;
+  const height = AXIS_H + EVENT_H + d.lanes.length * g.step + 4;
 
   // Start the cursor on the latest evidence.
   useEffect(() => {
@@ -248,7 +265,10 @@ export default function EvidenceTimeline({ d, change, onPickChange }: { d: Dossi
       <header className="evidence-head">
         <div>
           <h3>Evidence timeline</h3>
-          <p>Dots are observations, dashes are stretches nobody looked, hatching is a silent instrument. Hover or drag to read what was known at any moment.</p>
+          <p>
+            Dots are observations, dashes are stretches nobody looked, hatching is a silent instrument.{" "}
+            {touch ? "Drag across it to read what was known at any moment." : "Hover or drag to read what was known at any moment."}
+          </p>
         </div>
         <div className="evidence-cursor" aria-live="polite">
           <b>{formatYear(cursor)}</b>
@@ -284,25 +304,27 @@ export default function EvidenceTimeline({ d, change, onPickChange }: { d: Dossi
               if (hit) onPickChange(hit);
             }}
             onPointerUp={() => (dragging.current = false)}
+            onPointerCancel={() => (dragging.current = false)}
           >
-            <Plot d={d} w={w} x={x} change={change} />
+            <Plot d={d} geo={g} x={x} change={change} />
             {/* lane labels and readouts */}
             {d.lanes.map((lane, li) => {
-              const y0 = AXIS_H + EVENT_H + li * LANE_H;
+              const y0 = AXIS_H + EVENT_H + li * g.step;
+              const [line1, line2] = g.narrow ? [12, 25] : [15, 28];
               const obs = lane.kind === "continuous" ? null : lastBefore(lane, cursor);
               const v = lane.kind === "continuous" ? valueAt(lane, cursor) : obs?.[1];
               return (
                 <g key={lane.id}>
-                  <text x={0} y={y0 + 15} className="tl-lane-name">
+                  <text x={0} y={y0 + line1} className="tl-lane-name">
                     {lane.label}
                   </text>
-                  <text x={0} y={y0 + 28} className="tl-lane-unit">
+                  <text x={0} y={y0 + line2} className="tl-lane-unit">
                     {EVIDENCE_LABEL[lane.evidence]} · {lane.unit}
                   </text>
-                  <text x={w} y={y0 + 15} textAnchor="end" className="tl-value" fill={lane.color}>
+                  <text x={w} y={y0 + line1} textAnchor="end" className="tl-value" fill={lane.color}>
                     {v === null || v === undefined ? "no data" : fmtValue(lane, v)}
                   </text>
-                  <text x={w} y={y0 + 28} textAnchor="end" className="tl-lane-unit">
+                  <text x={w} y={y0 + line2} textAnchor="end" className="tl-lane-unit">
                     {obs ? `seen ${formatYear(obs[0])}${cursor - obs[0] > 0.1 ? ` · ${ago(cursor - obs[0])}` : ""}` : lane.kind === "continuous" ? "" : "not yet surveyed"}
                   </text>
                 </g>

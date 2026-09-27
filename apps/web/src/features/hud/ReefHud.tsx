@@ -30,7 +30,7 @@ export default function ReefHud({ onAscend }: { onAscend: () => void }) {
   const alert = BAA_LABELS[th.baa] ?? "";
 
   return (
-    <div className="hud" data-pressures={pressuresOpen}>
+    <div className="hud" data-pressures={pressuresOpen} data-selection={!!selection}>
       <div className="reef-id">
         <h2>{site.name}</h2>
         <div className="coords">
@@ -41,54 +41,63 @@ export default function ReefHud({ onAscend }: { onAscend: () => void }) {
         {site.designation && <p className="designation">{site.designation}</p>}
       </div>
 
-      <section className="gauges" aria-label="Conditions at this date" style={{ opacity: selection ? 0 : 1, pointerEvents: selection ? "none" : undefined, transition: "opacity 300ms" }}>
-        <div>
-          <div className="gauge-label">
-            <ProvenanceGlyph kind="observed" />
-            Heat stress
+      {/* On phones the conditions and the caption share one dock above the actions */}
+      <div className="reef-dock">
+        <section className="gauges" aria-label="Conditions at this date" style={{ opacity: selection ? 0 : 1, pointerEvents: selection ? "none" : undefined, transition: "opacity 300ms" }}>
+          <div>
+            <div className="gauge-label">
+              <ProvenanceGlyph kind="observed" />
+              Heat stress
+            </div>
+            <div className="gauge-value" style={{ color: heatColor(th.dhw) }}>
+              {th.dhw.toFixed(1)}
+              <small>°C-weeks</small>
+            </div>
+            <div className="gauge-alert" style={{ color: heatColor(th.dhw) }}>
+              {alert}
+            </div>
+            <div className="gauge-note">
+              SST {th.sst.toFixed(1)} °C, {th.ssta >= 0 ? "+" : "−"}
+              {Math.abs(th.ssta).toFixed(1)} °C vs normal
+            </div>
           </div>
-          <div className="gauge-value" style={{ color: heatColor(th.dhw) }}>
-            {th.dhw.toFixed(1)}
-            <small>°C-weeks</small>
-          </div>
-          <div className="gauge-alert" style={{ color: heatColor(th.dhw) }}>
-            {alert}
-          </div>
-          <div className="gauge-note">
-            SST {th.sst.toFixed(1)} °C, {th.ssta >= 0 ? "+" : "−"}
-            {Math.abs(th.ssta).toFixed(1)} °C vs normal
-          </div>
-        </div>
 
-        <dl className="gauge-minor">
-          <dt>
-            Hurricane <ProvenanceGlyph kind="observed" />
-          </dt>
-          <dd>
-            {storm
-              ? `${storm.storm.name}, ${Math.round(storm.km)} km`
-              : exposure.count
-                ? `${exposure.storms[exposure.storms.length - 1].name}, ${exposure.nearestKm} km`
-                : "none, 12 mo"}
-          </dd>
-          <dt>
-            Lionfish records <ProvenanceGlyph kind="observed" />
-          </dt>
-          <dd>{lion} in 12 mo</dd>
-          <dt>
-            AIS fishing <ProvenanceGlyph kind="simulated" />
-          </dt>
-          <dd>{sim.fishingHours90d.toFixed(0)} h, 90 d</dd>
-          <dt>
-            SAR detections <ProvenanceGlyph kind="simulated" />
-          </dt>
-          <dd>
-            {sim.sar90d}, {sim.sarUnmatched90d} unmatched
-          </dd>
-        </dl>
-      </section>
+          <dl className="gauge-minor">
+            <dt>
+              Hurricane <ProvenanceGlyph kind="observed" />
+            </dt>
+            <dd>
+              {storm
+                ? `${storm.storm.name}, ${Math.round(storm.km)} km`
+                : exposure.count
+                  ? `${exposure.storms[exposure.storms.length - 1].name}, ${exposure.nearestKm} km`
+                  : "none, 12 mo"}
+            </dd>
+            <dt>
+              Lionfish records <ProvenanceGlyph kind="observed" />
+            </dt>
+            <dd>{lion} in 12 mo</dd>
+            <dt>
+              AIS fishing <ProvenanceGlyph kind="simulated" />
+            </dt>
+            <dd>{sim.fishingHours90d.toFixed(0)} h, 90 d</dd>
+            <dt>
+              SAR detections <ProvenanceGlyph kind="simulated" />
+            </dt>
+            <dd>
+              {sim.sar90d}, {sim.sarUnmatched90d} unmatched
+            </dd>
+          </dl>
+        </section>
 
-      {pressuresOpen ? <PressureIndex /> : <Caption id={`${moment.key}-${siteId}`} text={moment.text} note={moment.note} />}
+        {pressuresOpen ? <PressureIndex /> : <Caption id={`${moment.key}-${siteId}`} text={moment.text} note={moment.note} />}
+        {lion > 0 && !pressuresOpen && (
+          <p className="reef-dock-note">
+            <ProvenanceGlyph kind="observed" /> {lion} lionfish record{lion === 1 ? "" : "s"} within 25 km, past 12 months (USGS NAS). Fish shown are
+            illustrative.
+          </p>
+        )}
+      </div>
 
       <div className="provenance-key" aria-label="Legend">
         <span>

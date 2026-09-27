@@ -209,6 +209,8 @@ export default function Timeline({ mode }: Props) {
   const tractMax = mode === "region" ? Math.max(...SITES.map((s) => thermalAt(s.id, t).dhw)) : 0;
   const dhwNow = thermal ? thermal.dhw : tractMax;
   const years = Array.from({ length: 9 }, (_, i) => 2016 + i);
+  // Label every other year where a year is narrower than its label (half-width phone timelines)
+  const labelled = w / years.length < 34 ? years.filter((_, i) => i % 2 === 0) : years;
   const px = x(t);
 
   return (
@@ -292,7 +294,7 @@ export default function Timeline({ mode }: Props) {
           <span style={{ color: heatColor(dhwNow), marginLeft: 10 }}>{dhwNow.toFixed(1)} DHW</span>
         </div>
         <div className="tl-years" aria-hidden="true">
-          {years.map((y) => (
+          {labelled.map((y) => (
             <span key={y} style={{ left: x(ymdToDay(y, 1, 1)) + (x(ymdToDay(y + 1, 1, 1)) - x(ymdToDay(y, 1, 1))) / 2 }}>
               {y}
             </span>

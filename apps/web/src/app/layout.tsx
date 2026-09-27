@@ -42,6 +42,9 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   themeColor: "#010a12",
   colorScheme: "dark",
+  // The globe and reef fill the screen edge to edge; .hud and the wordmark
+  // stay inside env(safe-area-inset-*).
+  viewportFit: "cover",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

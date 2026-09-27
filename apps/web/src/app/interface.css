@@ -90,7 +90,7 @@
 }
 
 .stage .hero {
-  top: 14vh;
+  top: 14svh;
 }
 
 /* v1's spread-out caps and letter reveal, set in light Geist so the title matches the interface */
@@ -890,10 +890,32 @@
   letter-spacing: 0;
 }
 
+/* Phone-only wrapper: on larger screens the gauges and caption place themselves */
+.stage .reef-dock {
+  display: contents;
+}
+
+.stage .reef-dock-note {
+  display: none;
+}
+
+/* ------------------------------------------------------------------ compact screens */
+/* Phones in either orientation (COMPACT in src/lib/ui.ts): Ask the reef moves to the
+   right edge, clear of the wordmark, and opens as wide as the screen allows */
+@media (max-width: 900px), (max-height: 500px) {
+  .stage .voice-agent {
+    left: auto;
+    right: var(--gutter);
+    transform: none;
+  }
+}
+
 /* ------------------------------------------------------------------ narrow screens */
-@media (max-width: 860px) {
+@media (max-width: 860px), (max-height: 500px) {
   /* The site list becomes chips, so the sidebar card falls away */
   .stage .region-panel {
+    width: auto;
+    justify-content: flex-start;
     padding: 0;
     border-radius: 0;
     background: none;
@@ -906,6 +928,11 @@
   .stage .region-title {
     padding: 0;
     text-shadow: 0 2px 20px rgba(0, 0, 0, 0.5);
+  }
+
+  /* title under the back link, site chips down by the timeline */
+  .stage .site-index {
+    margin-top: auto;
   }
 
   .stage .site-row {
@@ -932,22 +959,79 @@
     bottom: calc(var(--timeline-h, 0px) + 64px);
   }
 
-  .stage .gauges {
-    width: auto;
+  /* The conditions and the caption (or the pressures) share one glass dock above the actions */
+  .stage .reef-dock {
+    position: absolute;
+    left: var(--gutter);
+    right: var(--gutter);
+    bottom: calc(var(--timeline-h, 0px) + 64px);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
     padding: 14px 16px;
-    bottom: calc(var(--timeline-h, 0px) + 66px);
+    border-radius: 24px;
+    background: var(--mat-regular);
+    -webkit-backdrop-filter: blur(30px) saturate(180%);
+    backdrop-filter: blur(30px) saturate(180%);
+    box-shadow: var(--mat-edge), var(--mat-shadow);
+    /* never taller than the space under the reef's name; the caption scrolls if it must */
+    max-height: calc(100% - var(--timeline-h, 0px) - 64px - var(--gutter) - 150px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .stage .reef-dock :is(.gauges, .caption, .pressure-index) {
+    position: static;
+    width: auto;
+    max-width: none;
+    padding: 0;
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    animation: none;
+  }
+
+  /* the selected object's evidence takes the dock's place */
+  .stage .hud[data-selection="true"] .reef-dock {
+    display: none;
+  }
+
+  .stage .gauges > div {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    column-gap: 14px;
+    align-items: baseline;
+  }
+
+  .stage .gauge-label {
+    grid-column: 1 / -1;
   }
 
   .stage .gauge-value {
+    grid-row: span 2;
     font-size: 36px;
   }
 
-  .stage .pressure-index {
-    width: auto;
-    bottom: calc(var(--timeline-h, 0px) + 64px);
+  .stage .caption {
+    display: block;
+    font-size: 15px;
+  }
+
+  /* the 3D lionfish label has no room here; its line moves into the dock */
+  .stage .zone-label {
+    display: none;
+  }
+
+  .stage .reef-dock-note {
+    display: block;
+    font-size: 12px;
+    color: var(--aqua);
   }
 
   .stage .slate {
+    top: auto;
     bottom: calc(var(--timeline-h, 0px) + 64px);
   }
 
@@ -957,6 +1041,88 @@
     bottom: 10px;
     padding: 26px 14px 8px;
     border-radius: 24px;
+  }
+}
+
+/* ------------------------------------------------------------------ landscape phones */
+/* At most ~430 px tall (COMPACT in src/lib/ui.ts): side by side instead of stacked */
+@media (orientation: landscape) and (max-height: 500px) {
+  /* Region: back link and site chips on the left, layers under Ask the reef on the right */
+  .stage .region-panel {
+    right: calc(var(--gutter) + 16rem);
+    gap: 8px;
+  }
+
+  .stage .region-title {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+
+  .stage .site-index {
+    flex: none;
+    margin-right: 0;
+    padding-right: 0;
+  }
+
+  .stage .layers {
+    top: calc(var(--gutter) + 44px);
+    bottom: auto;
+    width: 15rem;
+    padding: 4px;
+  }
+
+  .stage .layer-toggle {
+    padding: 4px 6px 4px 10px;
+    font-size: 13px;
+  }
+
+  /* Reef: the timeline and actions on the left half, conditions and caption on the right */
+  .stage .timeline {
+    right: calc(50% + 4px);
+  }
+
+  .stage .reef-id :is(.coords, .designation) {
+    display: none;
+  }
+
+  .stage .reef-dock {
+    top: calc(var(--gutter) + 44px);
+    bottom: 10px;
+    left: calc(50% + 4px);
+    right: 10px;
+    max-height: none;
+  }
+
+  .stage .slate {
+    left: calc(50% + 4px);
+    right: 10px;
+    width: auto;
+    top: calc(var(--gutter) + 44px);
+    bottom: 10px;
+    max-height: none;
+  }
+}
+
+/* ------------------------------------------------------------------ touch screens */
+/* Touch-only devices have no keys to press, so the key hints go */
+@media (hover: none) and (pointer: coarse) {
+  .stage :is(kbd, .kbd) {
+    display: none;
+  }
+
+  .stage .voice-pill {
+    padding-right: 14px;
+  }
+}
+
+/* iOS Safari zooms the page into any focused field set under 16px */
+@media (pointer: coarse) {
+  .stage .voice-input {
+    font-size: 16px;
   }
 }
 

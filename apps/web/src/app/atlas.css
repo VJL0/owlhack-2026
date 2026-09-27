@@ -786,7 +786,8 @@
 
 .stage .evidence-body {
   width: 100%;
-  touch-action: none;
+  /* a sideways drag scrubs time; an up-down swipe still scrolls the phone sheet */
+  touch-action: pan-y;
   cursor: crosshair;
 }
 
@@ -916,7 +917,15 @@
 .stage .splat-dates button[aria-checked="true"] b { color: #000; font-weight: 600; }
 .stage .splat-dates button[aria-checked="true"] span { color: rgba(0, 0, 0, 0.55); }
 
-.stage .splat-blink { justify-content: space-between; width: 100%; font-size: 13px; }
+.stage .splat-blink {
+  justify-content: space-between;
+  width: 100%;
+  font-size: 13px;
+  /* a press-and-hold control: no text selection or iOS callout on a long touch */
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
 
 .stage .splat-loading {
   position: absolute;
@@ -942,38 +951,160 @@
 
 .stage .splat-hud .reef-id .coords span { font-variant-numeric: tabular-nums; }
 
-/* ------------------------------------------------------------------ small screens */
-@media (max-width: 900px) {
-  .stage .world-panel {
-    top: auto;
-    left: 8px;
-    right: 8px;
-    bottom: 8px;
-    width: auto;
-    max-height: 52vh;
+/* Phone-only wrappers: on larger screens their panels place themselves */
+.stage :is(.world-sheet, .dossier-sheet, .splat-dock) { display: contents; }
+
+/* ------------------------------------------------------------------ compact screens */
+/* Phones in either orientation: COMPACT in src/lib/ui.ts. Landscape phones are at most
+   ~430 px tall and tablets at least 600, so the height query only catches phones. */
+@media (max-width: 900px), (max-height: 500px) {
+  /* Back buttons stack under Ask the reef, clear of the wordmark */
+  .stage :is(.dz-back, .splat-hud .reef-actions) {
+    top: calc(var(--gutter) + 44px);
+    right: var(--gutter);
+    bottom: auto;
+    left: auto;
   }
 
-  .stage .world-heat { display: none; }
-
-  .stage .dossier {
-    left: 8px;
-    right: 8px;
-    width: auto;
-    top: auto;
-    bottom: 8px;
-    max-height: 48vh;
+  /* One sheet per view; tabs pick the panel (SheetTabs) */
+  .stage :is(.world-sheet, .dossier-sheet) {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    border-radius: 28px;
+    background: var(--mat-thick);
+    -webkit-backdrop-filter: blur(30px) saturate(180%);
+    backdrop-filter: blur(30px) saturate(180%);
+    box-shadow: var(--mat-edge), var(--mat-shadow);
+    overflow: hidden;
   }
 
-  .stage .dossier-side,
-  .stage .evidence-wrap { display: none; }
+  .stage :is(.world-sheet, .dossier-sheet) > :not(.sheet-tabs) {
+    position: static;
+    flex: 1;
+    min-height: 0;
+    width: auto;
+    max-height: none;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    pointer-events: auto;
+  }
+
+  .stage .world-sheet[data-view="reefs"] > .world-heat,
+  .stage .world-sheet[data-view="heat"] > .world-panel,
+  .stage .dossier-sheet[data-view="overview"] > :is(.dossier-side, .evidence-wrap),
+  .stage .dossier-sheet[data-view="timeline"] > :is(.dossier, .dossier-side),
+  .stage .dossier-sheet[data-view="side"] > :is(.dossier, .evidence-wrap) {
+    display: none;
+  }
+
+  .stage .world-panel { padding-top: 12px; }
+  .stage .world-heat { align-content: start; }
+  .stage .dossier-side { padding: 4px 8px 12px; }
+  .stage .evidence { padding: 4px 16px 12px; background: none; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
+  .stage .evidence-head { flex-direction: column; gap: 8px; margin-bottom: 10px; }
+  .stage .evidence-cursor { justify-items: start; text-align: left; }
+
+  .stage .sheet-tabs {
+    flex: none;
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    gap: 2px;
+    margin: 10px 10px 2px;
+    padding: 2px;
+    border-radius: 12px;
+    background: rgba(118, 118, 128, 0.24);
+  }
+
+  .stage .sheet-tabs button {
+    min-height: 34px;
+    padding: 0 6px;
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+    color: var(--bone);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 160ms ease-out;
+  }
+
+  .stage .sheet-tabs button[aria-selected="true"] {
+    background: #fff;
+    color: #000;
+    font-weight: 600;
+  }
+
+  /* The survey panel and its credit share one glass dock, so the credit stays legible
+     and never slips under a button */
+  .stage .splat-dock {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    border-radius: 24px;
+    background: var(--mat-regular);
+    -webkit-backdrop-filter: blur(30px) saturate(180%);
+    backdrop-filter: blur(30px) saturate(180%);
+    box-shadow: var(--mat-edge), var(--mat-shadow);
+    overflow: hidden;
+  }
+
+  .stage .splat-dock > * {
+    position: static;
+    width: auto;
+    max-width: none;
+  }
 
   .stage .splat-panel {
-    top: auto;
-    bottom: 64px;
-    left: 8px;
-    right: 8px;
-    width: auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    background: none;
+    box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
   }
+
+  .stage .splat-dates { grid-template-columns: 1fr 1fr; }
+  .stage .splat-dates button { flex-direction: column; align-items: flex-start; gap: 1px; }
+  .stage .splat-credit { flex: none; padding: 0 16px 12px; }
+
+  /* The plot title starts below the back button */
+  .stage .splat-hud .reef-id { top: calc(var(--gutter) + 96px); }
+  .stage .reef-id h2 { font-size: 2rem; }
+}
+
+/* Portrait phones: sheets rise from the bottom and leave the top half to the map */
+@media (max-width: 900px) and (orientation: portrait) {
+  .stage .world-sheet { left: 8px; right: 8px; bottom: 8px; height: 50svh; }
+  .stage .dossier-sheet { left: 8px; right: 8px; bottom: 8px; height: 52svh; }
+  .stage .splat-dock { left: 8px; right: 8px; bottom: 8px; max-height: 52svh; }
+}
+
+/* Landscape phones: sheets become full-height side columns */
+@media (orientation: landscape) and (max-width: 900px), (orientation: landscape) and (max-height: 500px) {
+  .stage :is(.world-sheet, .dossier-sheet) {
+    top: calc(var(--gutter) + 30px);
+    left: 8px;
+    bottom: 8px;
+    width: min(24rem, 52%);
+  }
+
+  .stage .splat-dock {
+    top: calc(var(--gutter) + 92px);
+    right: 8px;
+    bottom: 8px;
+    width: min(19rem, 45%);
+  }
+
+  .stage .splat-hud .reef-id { right: calc(min(19rem, 45%) + 20px); }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1053,6 +1184,23 @@
 .stage .wh-slider input[type="range"]:focus-visible {
   outline: 2px solid var(--aqua);
   outline-offset: 4px;
+}
+
+/* Fingers: a 28 px tall hit area around the same 6 px track, and a larger thumb */
+@media (pointer: coarse) {
+  .stage .wh-slider { grid-template-columns: 32px 1fr 32px; }
+  .stage .wh-slider button { width: 32px; height: 32px; }
+
+  .stage .wh-slider input[type="range"] {
+    height: 28px;
+    padding: 11px 0;
+    background-origin: content-box;
+    background-clip: content-box;
+  }
+
+  .stage .wh-slider input[type="range"]::-webkit-slider-thumb { width: 22px; height: 22px; }
+  .stage .wh-slider input[type="range"]::-moz-range-thumb { width: 22px; height: 22px; }
+  .stage .wh-ticks { margin: -4px 38px 0; }
 }
 
 .stage .wh-ticks {

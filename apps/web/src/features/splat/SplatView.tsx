@@ -6,6 +6,7 @@ import { useDocument } from "@/lib/atlasClient";
 import type { SplatSurvey } from "@/lib/flagships";
 import { exitSplat } from "@/lib/navigation";
 import { useStore } from "@/lib/store";
+import { useTouchOnly } from "@/lib/ui";
 import EvidenceTag from "@/features/atlas/EvidenceTag";
 
 const SplatScene = dynamic(() => import("./SplatScene"), { ssr: false });
@@ -20,6 +21,7 @@ export default function SplatView() {
   const index = useStore((s) => s.splatIndex);
   const setSplat = useStore((s) => s.setSplat);
   const reduced = useStore((s) => s.reducedMotion);
+  const touch = useTouchOnly();
   const manifest = useDocument<{ plots: Record<string, { frame: { box: { x: number[]; y: number[]; z: number[] }; origin: number[] }; surveys: SplatSurvey[] }> }>("soneva/splats");
   const entry = manifest && manifest !== "error" ? manifest.plots[plot] : undefined;
   const surveys = entry?.surveys ?? [];
@@ -83,35 +85,42 @@ export default function SplatView() {
           </div>
         </div>
 
-        <section className="splat-panel" aria-label="Survey dates">
-          <header>
-            <h3>Survey</h3>
-            <EvidenceTag kind="field" />
-          </header>
-          <div className="splat-dates" role="radiogroup" aria-label="Survey date">
-            {surveys.map((s, i) => {
-              const l = loads[s.file];
-              return (
-                <button key={s.file} role="radio" aria-checked={i === index} onClick={() => setSplat(plot, i)}>
-                  <b>{long(s.date)}</b>
-                  <span>{l?.state === "ready" ? `${(s.bytes / 1e6).toFixed(1)} MB` : l?.state === "error" ? "failed to load" : `loading ${Math.round((l?.progress ?? 0) * 100)}%`}</span>
-                </button>
-              );
-            })}
-          </div>
-          <button
-            className="btn-instrument splat-blink"
-            onPointerDown={() => setBlink(index === 0 ? surveys.length - 1 : 0)}
-            onPointerUp={() => setBlink(null)}
-            onPointerLeave={() => setBlink(null)}
-          >
-            Hold to compare with {index === 0 ? "the last" : "the first"} survey <span className="kbd">B</span>
-          </button>
-          <p className="side-note">
-            Drag to orbit, scroll to zoom. The same colony stays in the same place across dates; lighting and water clarity change between dives, so compare
-            shapes, not colours.
+        <div className="splat-dock">
+          <section className="splat-panel" aria-label="Survey dates">
+            <header>
+              <h3>Survey</h3>
+              <EvidenceTag kind="field" />
+            </header>
+            <div className="splat-dates" role="radiogroup" aria-label="Survey date">
+              {surveys.map((s, i) => {
+                const l = loads[s.file];
+                return (
+                  <button key={s.file} role="radio" aria-checked={i === index} onClick={() => setSplat(plot, i)}>
+                    <b>{long(s.date)}</b>
+                    <span>{l?.state === "ready" ? `${(s.bytes / 1e6).toFixed(1)} MB` : l?.state === "error" ? "failed to load" : `loading ${Math.round((l?.progress ?? 0) * 100)}%`}</span>
+                  </button>
+                );
+              })}
+            </div>
+            <button
+              className="btn-instrument splat-blink"
+              onPointerDown={() => setBlink(index === 0 ? surveys.length - 1 : 0)}
+              onPointerUp={() => setBlink(null)}
+              onPointerLeave={() => setBlink(null)}
+              onPointerCancel={() => setBlink(null)}
+            >
+              Hold to compare with {index === 0 ? "the last" : "the first"} survey <span className="kbd">B</span>
+            </button>
+            <p className="side-note">
+              {touch ? "Drag to orbit, pinch to zoom." : "Drag to orbit, scroll to zoom."} The same colony stays in the same place across dates; lighting and water clarity change between dives, so compare
+              shapes, not colours.
+            </p>
+          </section>
+          <p className="splat-credit">
+            3D reconstruction: Soneva Conservation and Sustainability Maldives and Wildflow, CC BY 4.0 (huggingface.co/datasets/wildflow/soneva-corals).
+            Converted to SPZ by Reef Atlas; colours are the splats&rsquo; base colour.
           </p>
-        </section>
+        </div>
 
         {load?.state !== "ready" && (
           <p className="splat-loading" aria-live="polite">
@@ -124,11 +133,6 @@ export default function SplatView() {
             Back to the dossier <span className="kbd">Esc</span>
           </button>
         </div>
-
-        <p className="splat-credit">
-          3D reconstruction: Soneva Conservation and Sustainability Maldives and Wildflow, CC BY 4.0 (huggingface.co/datasets/wildflow/soneva-corals).
-          Converted to SPZ by Reef Atlas; colours are the splats&rsquo; base colour.
-        </p>
       </div>
     </div>
   );
