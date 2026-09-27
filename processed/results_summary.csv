@@ -1,0 +1,68 @@
+section,metric,value,unit
+risk_curve,P(significant bleaching) at 0 DHW,8.6,%
+risk_curve,P(significant bleaching) at 4 DHW,64.4,%
+risk_curve,P(significant bleaching) at 8 DHW,84.1,%
+timing,"% significant bleaching, surveyed 0-2 weeks after heat peak",86.8,%
+timing,"% significant bleaching, surveyed 2-4 weeks after heat peak",82.7,%
+timing,"% significant bleaching, surveyed 1-2 months after heat peak",42.7,%
+timing,"% significant bleaching, surveyed 2-3 months after heat peak",14.3,%
+timing,"% significant bleaching, surveyed 3-5 months after heat peak",8.0,%
+timing,"% significant bleaching, surveyed 5-12 months after heat peak",31.6,%
+model_comparison,old model AUC: Each year held out (2013-2020),0.762,AUC
+model_comparison,new model AUC: Each year held out (2013-2020),0.821,AUC
+model_comparison,"old model AUC: Train to 2018, test 2019-2020",0.695,AUC
+model_comparison,"new model AUC: Train to 2018, test 2019-2020",0.757,AUC
+model_comparison,"old model AUC: Train to 2016, test 2017-2020",0.684,AUC
+model_comparison,"new model AUC: Train to 2016, test 2017-2020",0.762,AUC
+model_comparison,old model AUC: Reefs held out (never seen),0.809,AUC
+model_comparison,new model AUC: Reefs held out (never seen),0.893,AUC
+heat_by_year,2021 % reefs past 4 DHW,9.6,%
+heat_by_year,2021 % reefs past 8 DHW,0.6,%
+heat_by_year,2021 mean P(significant bleaching),36.6,%
+heat_by_year,2022 % reefs past 4 DHW,36.9,%
+heat_by_year,2022 % reefs past 8 DHW,8.2,%
+heat_by_year,2022 mean P(significant bleaching),53.6,%
+heat_by_year,2023 % reefs past 4 DHW,47.5,%
+heat_by_year,2023 % reefs past 8 DHW,39.9,%
+heat_by_year,2023 mean P(significant bleaching),56.2,%
+heat_by_year,2024 % reefs past 4 DHW,81.5,%
+heat_by_year,2024 % reefs past 8 DHW,47.2,%
+heat_by_year,2024 mean P(significant bleaching),75.7,%
+heat_by_year,2025 % reefs past 4 DHW,60.2,%
+heat_by_year,2025 % reefs past 8 DHW,31.0,%
+heat_by_year,2025 mean P(significant bleaching),55.9,%
+heat_by_year,2026 % reefs past 4 DHW,52.5,%
+heat_by_year,2026 % reefs past 8 DHW,27.3,%
+heat_by_year,2026 mean P(significant bleaching),58.1,%
+threat_effects,fishing_hours_25km effect on coral cover,0.217,pct points
+threat_effects,fishing_hours_25km 95% CI,-0.101 to 0.601,pct points
+threat_effects,fishing_hours_25km p-value,0.175,
+threat_effects,lionfish_years_established_25km effect on coral cover,-0.293,pct points
+threat_effects,lionfish_years_established_25km 95% CI,-0.679 to 0.031,pct points
+threat_effects,lionfish_years_established_25km p-value,0.08,
+threat_effects,cots_sightings_50km effect on coral cover,-1.741,pct points
+threat_effects,cots_sightings_50km 95% CI,-3.136 to -0.38,pct points
+threat_effects,cots_sightings_50km p-value,0.011,
+exposure,2021 % reefs with crown-of-thorns nearby,27.5,%
+exposure,2022 % reefs with crown-of-thorns nearby,25.1,%
+exposure,2023 % reefs with crown-of-thorns nearby,41.4,%
+exposure,2024 % reefs with crown-of-thorns nearby,46.7,%
+exposure,2025 % reefs with crown-of-thorns nearby,57.0,%
+exposure,2026 % reefs with crown-of-thorns nearby,57.7,%
+exposure,2021 % reefs with lionfish nearby,90.0,%
+exposure,2022 % reefs with lionfish nearby,90.0,%
+exposure,2023 % reefs with lionfish nearby,91.2,%
+exposure,2024 % reefs with lionfish nearby,91.7,%
+exposure,2025 % reefs with lionfish nearby,91.7,%
+exposure,2026 % reefs with lionfish nearby,91.7,%
+risk_outlook,2021 % reefs high or very high bleaching risk,32.2,%
+risk_outlook,2022 % reefs high or very high bleaching risk,54.2,%
+risk_outlook,2023 % reefs high or very high bleaching risk,51.5,%
+risk_outlook,2024 % reefs high or very high bleaching risk,84.9,%
+risk_outlook,2025 % reefs high or very high bleaching risk,56.5,%
+risk_outlook,2026 % reefs high or very high bleaching risk,54.2,%
+risk_outlook,2027 % reefs high or very high bleaching risk,90.1,%
+risk_outlook,2028 % reefs high or very high bleaching risk,72.9,%
+risk_outlook,2029 % reefs high or very high bleaching risk,75.1,%
+risk_outlook,2030 % reefs high or very high bleaching risk,76.9,%
+risk_outlook,2031 % reefs high or very high bleaching risk,77.9,%

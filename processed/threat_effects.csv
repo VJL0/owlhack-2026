@@ -1,0 +1,4 @@
+threat,description,n_surveys,effect_pp,ci_low,ci_high,p_value,evidence,detectable,note
+cots_sightings_50km,crown-of-thorns sightings within 50 km (per log-step),3745,-1.741,-3.136,-0.38,0.011,moderate (p 0.01-0.05),True,applied to recent years
+lionfish_years_established_25km,lionfish: years established within 25 km (per year),523,-0.293,-0.679,0.031,0.08,none (p >= 0.05),False,no detectable effect; not applied
+fishing_hours_25km,industrial fishing hours within 25 km (per log-step),4268,0.217,-0.101,0.601,0.175,none (p >= 0.05),False,no detectable effect; not applied
