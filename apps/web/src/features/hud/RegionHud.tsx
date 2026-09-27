@@ -24,6 +24,9 @@ export default function RegionHud() {
   return (
     <div className="hud">
       <div className="region-panel">
+        <button className="btn-chip region-back" onClick={() => setPhase("world")}>
+          ← All flagship reefs <span className="sr-only">(Esc)</span>
+        </button>
         <div className="region-title">
           <h2>Florida&rsquo;s Coral Reef</h2>
           <p>

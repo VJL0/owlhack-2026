@@ -1,19 +1,30 @@
 # Reef Atlas
 
-A cinematic 3D journey into Florida's Coral Reef, 2016–2024, with a voice
-guide you can talk to, and a public archive of global reef bleaching data
-served from Tiger Cloud (TigerData). Built for OwlHacks 2026.
+Reefs change between the few times anyone surveys them, while heat, starfish,
+storms and fishing overlap in between. Reef Atlas reconstructs what happened
+between surveys at four places with long public records: Moorea (French
+Polynesia), Lizard Island (Great Barrier Reef), Soneva Fushi (Maldives, real 3D
+photogrammetry) and Florida's Coral Reef. It has a voice guide you can talk to,
+and a public archive of global reef bleaching data served from Tiger Cloud
+(TigerData). Built for OwlHacks 2026.
 
 - Live experience: <https://reefatlas.us>
 - Reef data explorer: <https://reefatlas.us/data>
 - Data API: <https://reefatlas.us/api/reef-data?dataset=risk&year=2023>
 
-The viewer starts on the night side of the Earth, flies down Florida's reef
-tract, dives beneath the surface of one of nine reef sites, and shows the
-pressures acting on that reef over time: heat stress, fishing activity, invasive
-lionfish, and hurricanes. Press `V` to ask the reef a question by voice or text,
+The viewer starts on the night side of the Earth and pulls back to the whole
+globe, where 2,720 reefs are coloured by their heat stress and four flagship
+reefs are marked. Each flagship opens an evidence dossier: an evidence timeline
+of field surveys, reef sensors, satellite heat stress, cyclone tracks and the
+monitoring program's own attributions, with every stretch nobody observed shown
+as such; the declines measured between consecutive surveys, each with what else
+was present in that interval (never a claimed cause); what is missing; and why
+the reef needs another look. At Soneva Fushi you can enter the real 3D surveys
+of a reef plot and switch between dates. Florida keeps its cinematic flight down
+the reef tract and a dive beneath one of nine reef sites, where heat stress,
+fishing activity, invasive lionfish and hurricanes drive the underwater scene. Press `V` to ask the reef a question by voice or text,
 in English or Spanish. A Gemini agent answers only from the reef data, and can
-move the page ("take me to Looe Key", "go to August 2023"). ElevenLabs speaks
+move the page ("take me to Moorea", "take me to Looe Key", "go to August 2023"). ElevenLabs speaks
 the answer. A separate server-rendered explorer pages through 18,539 records for
 2,720 reefs worldwide, stored in PostgreSQL on Tiger Cloud.
 
@@ -39,8 +50,20 @@ Deeper references: [`apps/web/README.md`](apps/web/README.md) (the experience),
 Every number on screen carries a provenance glyph: ● observed, ◌ model output,
 ⊘ simulated.
 
+Flagship reefs use a finer set of evidence labels: field survey, reef sensor,
+satellite, storm track, reported cause, derived. The full verified inventory
+(URLs, variables, dates, resolution, licences, limitations, and what could not be
+accessed) is in [`docs/data-inventory.md`](docs/data-inventory.md).
+
 | Layer | Source | Kind | Where it lives |
 | --- | --- | --- | --- |
+| Moorea coral, macroalgae, fish, crown-of-thorns starfish (2005–2025), reef thermistors (2005–2024), 49-sensor lagoon network (2021–2025), 2019 bleaching colony segmentation | Moorea Coral Reef LTER data packages on EDI (knb-lter-mcr.4, .6, .1039, .1035, .1045, .5050) | field / sensor | `data/raw/mcr`, `src/data/flagships/moorea*.json` |
+| Lizard Island coral cover, starfish, juvenile corals (1985–2026) and disturbance attributions | AIMS Long-Term Monitoring Program (doi:10.25845/5c09bc4ff315c) | field / reported | `data/raw/aims`, `src/data/flagships/lizard-island.json` |
+| Soneva Fushi 3D surveys: 23 surveys, 6 plots, Gaussian splats | wildflow/soneva-corals (Hugging Face, CC BY 4.0), 2 plots converted to SPZ | field (3D) | `public/splats/soneva`, `src/data/flagships/soneva-*.json` |
+| Heat stress at the flagships (weekly, 2002–2026) | NOAA Coral Reef Watch 5 km v3.1 via NOAA CoastWatch ERDDAP | satellite | `data/raw/crw/weekly-*.csv` |
+| On-reef heat stress at Moorea | NOAA's DHW method applied to the 10 m thermistor | derived | `src/data/flagships/moorea.json` |
+| Cyclones near the flagships (1985–2026) | NOAA NCEI IBTrACS v04r01 | track | `data/raw/ibtracs` |
+| Surface change vs. noise floor, Soneva plots | height comparison of co-registered splats | derived | `src/data/flagships/soneva-change.json` |
 | Degree Heating Weeks, SST, SST anomaly, alert level (9 sites, weekly, 2016–2024) | NOAA Coral Reef Watch 5 km v3.1 via PacIOOS ERDDAP | observed | `src/data/thermal.json` |
 | Hurricane tracks and closest approach per site | NOAA NHC HURDAT2 (2025 release) | observed / derived | `src/data/storms.json` |
 | Lionfish records within 25 km | USGS Nonindigenous Aquatic Species | observed | `src/data/lionfish.json` |
@@ -137,6 +160,8 @@ apps/web/                      Next.js 16 app (the only deployable)
     api/health/route.ts        liveness probe for Docker and Caddy
     globals.css, interface.css base rules, then the glass interface layer
   src/features/                experience, globe, dive, reef, hud, timeline, intro
+  src/features/atlas/          world view, flagship dossier, evidence timeline, side cards
+  src/features/splat/          Soneva 3D surveys (Spark Gaussian splats in React Three Fiber)
   src/features/voice/          VoiceAgent panel, Narrator, speech queue, recorder, i18n
   src/lib/                     data access, time, demo model, store, narrative,
                                navigation (page moves), voiceActions (UiAction types)
@@ -145,10 +170,15 @@ apps/web/                      Next.js 16 app (the only deployable)
                                client, agent loop and tools, ReefData interface and
                                its JSON implementation
   src/data/                    generated JSON (committed; built from data/raw)
+  src/data/flagships/          flagship dossiers, Moorea lagoon and 2019 plots, Soneva splat manifest
   database/                    SQL migration, dataset allowlist, filters, tests, docs
-  scripts/                     copy-cesium, build-data, import-tiger, provision-tiger-reader
+  scripts/                     copy-cesium, build-data, import-tiger, provision-tiger-reader,
+                               fetch-flagships, prepare-splats, analyze-soneva, build-flagships
+  public/splats/soneva/        SPZ files for two Soneva plots, four dates each
   Dockerfile                   multi-stage standalone image, non-root runtime
-data/raw/                      raw NOAA CRW CSVs, HURDAT2, USGS lionfish JSON
+data/raw/                      raw NOAA CRW CSVs, HURDAT2, USGS lionfish JSON; flagship sources
+                               (mcr, aims, soneva, ibtracs, crw weekly) with SHA-256 in sources.json
+docs/data-inventory.md         verified inventory of every flagship data source
 bleaching_risk_2021_2025.csv   source dataset (never edited; hash pinned)
 reef_stress_analysis.csv       source dataset (never edited; hash pinned)
 infra/                         compose.yaml, Caddyfile, release scripts, tests
@@ -170,8 +200,15 @@ stateDiagram-v2
             [*] --> boot
             boot --> intro: Cesium ready, startIntro()
             boot --> reef: deep link reef=site-id
-            intro --> flying: Enter the Ocean, or with spoken guide
-            intro --> region: Skip the flight
+            boot --> flagship: deep link flagship=id
+            intro --> world: Enter the Ocean, or with spoken guide
+            intro --> flying: Fly to Florida
+            world --> flagship: pick Moorea, Lizard Island or Soneva Fushi
+            flagship --> world: Esc or Back to the world
+            flagship --> splat: Enter a Soneva plot in 3D
+            splat --> flagship: Esc or Back to the dossier
+            world --> flying: pick Florida
+            region --> world: Esc or All flagship reefs
             flying --> region: flyToRegion() done
             region --> diving: pick a site, or voice go_to_reef
             diving --> reef: diveTo() done
@@ -568,6 +605,9 @@ silences speech before the reef's own `Esc` (leave the reef) can run.
 | `get_lionfish_near(site_id, from, to, radius_km = 25)` | data | USGS NAS, observed | count, first and latest date, nearest distance, count per year |
 | `get_activity(site_id, from, to)` | data | **simulated** AIS / SAR | fishing hours, vessel hours, SAR detections, unmatched SAR |
 | `compare_sites(metric, from, to)` | data | any of the above | all nine sites ranked by `max_dhw`, `weeks_dhw_at_least_4`, `lionfish_sightings`, `storm_passes` or `fishing_hours` |
+| `get_flagship_evidence(flagship_id, from_year?, to_year?)` | data | flagship dossiers (field, sensor, satellite, track, reported, derived) | survey values with dates, heat peaks, cyclones, reported causes, declines with what co-occurred, gaps, what is missing |
+| `go_to_flagship(flagship_id)` / `go_to_world()` | page | – | open Moorea, Lizard Island, Soneva Fushi or Florida; pull back to the globe |
+| `set_flagship_date(date)` | page | – | move the dossier's evidence timeline cursor |
 | `go_to_reef(site_id)` | page | – | dive to one of the nine sites |
 | `go_to_map()` | page | – | rise back to the map |
 | `set_date(date)` | page | – | move the timeline (2016-01-01…2024-12-31) |
@@ -948,7 +988,8 @@ pnpm install --frozen-lockfile
 pnpm dev                  # http://localhost:3000 (copies Cesium first)
 ```
 
-Deep link underwater: `http://localhost:3000/#reef=looe-key`. Keys: `Space`
+Deep links: `http://localhost:3000/#reef=looe-key` (underwater),
+`#flagship=moorea` (dossier), `#splat=ootsl1` (Soneva 3D survey). Keys: `Space`
 play/pause, `←/→` a week (`Shift` a month, `PgUp/PgDn` a year), `P` pressures,
 `V` talk to the reef, `Esc` close the voice panel or stop speech first, then go
 back.
@@ -957,7 +998,10 @@ back.
 | --- | --- |
 | `pnpm build` / `pnpm start` | production build and server |
 | `pnpm typecheck` / `pnpm lint` | TypeScript and ESLint |
-| `pnpm data` | rebuild `src/data/*.json` from `data/raw` |
+| `pnpm data` | rebuild the Florida `src/data/*.json` from `data/raw` |
+| `pnpm data:fetch` | download the flagship sources into `data/raw` (large files reduced on the fly, big downloads cached in ignored `data/cache`) |
+| `pnpm data:splats` | convert the Soneva splat PLYs to SPZ and measure change against the noise floor |
+| `pnpm data:flagships` | rebuild `src/data/flagships/*.json` and `src/data/global-reefs.json` |
 | `pnpm test:db` | unit tests for connection policy and filters |
 | `pnpm db:validate` | check both CSV hashes (no database access) |
 | `pnpm db:import` / `pnpm db:verify` | import into Tiger, or verify without writing |

@@ -18,6 +18,12 @@ async function postJson<T>(url: string, init: RequestInit): Promise<T> {
   return body as T;
 }
 
+/** Decimal year (flagship timeline) → YYYY-MM-DD for the agent. */
+function flagshipIso(t: number) {
+  const y = Math.floor(t);
+  return new Date(Date.UTC(y, 0, 1) + (t - y) * (Date.UTC(y + 1, 0, 1) - Date.UTC(y, 0, 1))).toISOString().slice(0, 10);
+}
+
 /** Stale results from a request the viewer already closed or replaced. */
 class Cancelled extends Error {}
 
@@ -79,8 +85,10 @@ export default function VoiceAgent() {
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
         question: q,
-        view: s.phase === "reef" ? "reef" : "map",
+        view: s.phase === "reef" ? "reef" : s.phase === "flagship" || s.phase === "splat" ? "flagship" : s.phase === "world" ? "world" : "map",
         siteId: s.phase === "reef" ? s.siteId : undefined,
+        flagshipId: s.phase === "flagship" || s.phase === "splat" ? s.flagshipId : undefined,
+        flagshipDate: (s.phase === "flagship" || s.phase === "splat") && s.flagshipT !== null ? flagshipIso(s.flagshipT) : undefined,
         date: isoDate(s.t),
         layers: MAP_LAYERS.filter((l) => s.layers[l]),
         lang: s.lang,
@@ -254,7 +262,7 @@ export default function VoiceAgent() {
         </div>
       ) : (
         <div className="voice-suggest">
-          {t.suggestions[phase === "reef" ? "reef" : "region"].map((q) => (
+          {t.suggestions[phase === "reef" ? "reef" : phase === "flagship" || phase === "splat" ? "flagship" : phase === "world" ? "world" : "region"].map((q) => (
             <button key={q} className="voice-chip" disabled={status !== "idle"} onClick={() => run((id) => ask(q, id))}>
               {q}
             </button>

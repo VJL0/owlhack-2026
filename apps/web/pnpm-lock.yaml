@@ -20,6 +20,9 @@ importers:
       '@react-three/postprocessing':
         specifier: 3.1.2
         version: 3.1.2(@react-three/fiber@9.8.1(@types/react@19.3.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(three@0.186.1))(@types/three@0.186.0)(postprocessing@6.39.5(three@0.186.1))(react@19.2.8)(three@0.186.1)
+      '@sparkjsdev/spark':
+        specifier: 2.2.0
+        version: 2.2.0(three@0.186.1)
       cesium:
         specifier: 1.145.0
         version: 1.145.0
@@ -604,6 +607,11 @@ packages:
 
   '@rtsao/scc@1.1.0':
     resolution: {integrity: sha512-zt6OdqaDoOnJ1ZYsCYGt9YmWzDXl4vQdKTyJev62gFhRGKdx7mcT54V9KIjg+d2wi9EXsPvAPKe7i7WjfVWB8g==}
+
+  '@sparkjsdev/spark@2.2.0':
+    resolution: {integrity: sha512-wf5F2YAmPXnjm20/MgXYer9FQTXz2JOCo05HwxFkaD7Guk9rHVPIwdJ6fq0oF9ME0heMvYj+TxS6DTrucvy6KA==}
+    peerDependencies:
+      three: '>=0.180.0'
 
   '@spz-loader/core@0.3.1':
     resolution: {integrity: sha512-8qJ1WIBXaJu8HjnJAjYniE0kYcr0kCe5Hp7kDzYiGVvvd7zyrOBwbF5imoW5mvwx1Qba0hxGEK5R9jEoaHKJFA==}
@@ -3173,6 +3181,11 @@ snapshots:
       - '@types/three'
 
   '@rtsao/scc@1.1.0': {}
+
+  '@sparkjsdev/spark@2.2.0(three@0.186.1)':
+    dependencies:
+      fflate: 0.8.3
+      three: 0.186.1
 
   '@spz-loader/core@0.3.1': {}
 

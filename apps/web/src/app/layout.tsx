@@ -3,6 +3,7 @@ import { Azeret_Mono, Geist, Geist_Mono, Spectral } from "next/font/google";
 import "./globals.css";
 // Interface layer over the base rules; must load after globals.css.
 import "./interface.css";
+import "./atlas.css";
 
 const spectral = Spectral({
   variable: "--font-serif",

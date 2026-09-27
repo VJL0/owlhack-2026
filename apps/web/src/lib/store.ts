@@ -4,10 +4,14 @@ import { create } from "zustand";
 import { T_DEFAULT, T_MAX, T_MIN, clamp } from "./time";
 import type { Pair, Pressure } from "./model";
 import type { Lang } from "./voiceActions";
+import type { FlagshipId } from "./flagships";
 
 export type Phase =
   | "boot" // loading the globe
   | "intro" // title card over the Earth
+  | "world" // the whole Earth: flagship reefs and global heat stress
+  | "flagship" // one flagship reef's evidence dossier (Moorea, Lizard Island, Soneva Fushi)
+  | "splat" // inside a real photogrammetric 3D survey (Soneva Fushi)
   | "flying" // Earth → Florida flight
   | "region" // Florida's Coral Reef overview
   | "diving" // flying down to a reef site
@@ -35,6 +39,17 @@ interface State {
   guide: boolean;
   /** Language for the guide and voice answers. */
   lang: Lang;
+  /** The flagship reef being viewed (world, flagship and splat phases). */
+  flagshipId: Exclude<FlagshipId, "florida"> | null;
+  /** Flagship hovered in the world view (the globe turns toward it). */
+  flagshipHover: FlagshipId | null;
+  /** Cursor on the flagship evidence timeline, as a decimal year. */
+  flagshipT: number | null;
+  /** Year of the global heat-stress layer (2021–2025). */
+  worldYear: number;
+  /** Soneva plot shown in 3D, and which of its surveys. */
+  splatPlot: string;
+  splatIndex: number;
 
   setPhase: (p: Phase) => void;
   setSite: (id: string) => void;
@@ -51,6 +66,11 @@ interface State {
   toggleLayer: (k: keyof State["layers"]) => void;
   setGuide: (v: boolean) => void;
   setLang: (l: Lang) => void;
+  openFlagship: (id: Exclude<FlagshipId, "florida">) => void;
+  setFlagshipHover: (id: FlagshipId | null) => void;
+  setFlagshipT: (t: number | null) => void;
+  setWorldYear: (y: number) => void;
+  setSplat: (plot: string, index?: number) => void;
 }
 
 export const useStore = create<State>((set) => ({
@@ -68,6 +88,12 @@ export const useStore = create<State>((set) => ({
   layers: { sst: true, storms: true, lionfish: true, ais: false },
   guide: false,
   lang: "en",
+  flagshipId: null,
+  flagshipHover: null,
+  flagshipT: null,
+  worldYear: 2024,
+  splatPlot: "ootsl1",
+  splatIndex: 0,
 
   setPhase: (phase) => set({ phase }),
   setSite: (siteId) => set({ siteId }),
@@ -84,4 +110,9 @@ export const useStore = create<State>((set) => ({
   toggleLayer: (k) => set((s) => ({ layers: { ...s.layers, [k]: !s.layers[k] } })),
   setGuide: (guide) => set({ guide }),
   setLang: (lang) => set({ lang }),
+  openFlagship: (flagshipId) => set({ flagshipId, flagshipT: null, phase: "flagship" }),
+  setFlagshipHover: (flagshipHover) => set({ flagshipHover }),
+  setFlagshipT: (flagshipT) => set({ flagshipT }),
+  setSplat: (splatPlot, splatIndex = 0) => set({ splatPlot, splatIndex }),
+  setWorldYear: (worldYear) => set({ worldYear: Math.min(2025, Math.max(2021, Math.round(worldYear))) }),
 }));

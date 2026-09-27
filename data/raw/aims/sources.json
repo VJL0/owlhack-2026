@@ -1,0 +1,58 @@
+{
+  "lizard_manta.json": {
+    "url": "https://api.aims.gov.au/data-v2.0/10.25845/5c09bc4ff315c/data?domain_name=Lizard%20Isles&domain_category=reef&data_type=manta",
+    "dataset": "AIMS Long-Term Monitoring Program (doi:10.25845/5c09bc4ff315c)",
+    "retrieved": "2026-09-27",
+    "sha256": "41dc2a4afd428a3d472da85721728f98ef2cb6c446d4471abf52978186f67867",
+    "bytes": 14510,
+    "license": "CC BY 4.0"
+  },
+  "lizard_photo_transect.json": {
+    "url": "https://api.aims.gov.au/data-v2.0/10.25845/5c09bc4ff315c/data?domain_name=Lizard%20Isles&domain_category=reef&data_type=photo-transect",
+    "dataset": "AIMS Long-Term Monitoring Program (doi:10.25845/5c09bc4ff315c)",
+    "retrieved": "2026-09-27",
+    "sha256": "f217c9f8b5eed02ed8a9dcae974333ee3c899c7308a029252c784d778656af72",
+    "bytes": 332650,
+    "license": "CC BY 4.0"
+  },
+  "lizard_juvenile.json": {
+    "url": "https://api.aims.gov.au/data-v2.0/10.25845/5c09bc4ff315c/data?domain_name=Lizard%20Isles&domain_category=reef&data_type=juvenile",
+    "dataset": "AIMS Long-Term Monitoring Program (doi:10.25845/5c09bc4ff315c)",
+    "retrieved": "2026-09-27",
+    "sha256": "0afd873d7885b0ca8077f6bc576045c0b0e860603c7078635d204842b7afbd0a",
+    "bytes": 42491,
+    "license": "CC BY 4.0"
+  },
+  "lizard_cots.json": {
+    "url": "https://api.aims.gov.au/data-v2.0/10.25845/5c09bc4ff315c/cots-by-domain?domain_category=reef&domain_name=Lizard%20Isles",
+    "dataset": "AIMS Long-Term Monitoring Program (doi:10.25845/5c09bc4ff315c)",
+    "retrieved": "2026-09-27",
+    "sha256": "7aa6531c86333cf5681a749199f79f8c1558604b69940aeaa811bb03d2d6403c",
+    "bytes": 6724,
+    "license": "CC BY 4.0"
+  },
+  "lizard_disturbance.json": {
+    "url": "https://api.aims.gov.au/data-v2.0/10.25845/5c09bc4ff315c/disturbance?reef=Lizard%20Isles&aggregation=reef&zone=_",
+    "dataset": "AIMS Long-Term Monitoring Program (doi:10.25845/5c09bc4ff315c)",
+    "retrieved": "2026-09-27",
+    "sha256": "b747ff807d7102ef5f7579aaf8c5492a3bf06d27ab116979705fe55fabbc60e0",
+    "bytes": 5487,
+    "license": "CC BY 4.0"
+  },
+  "lizard_sites.json": {
+    "url": "https://api.aims.gov.au/data-v2.0/10.25845/5c09bc4ff315c/site?aims_reef_name=Lizard%20Isles",
+    "dataset": "AIMS Long-Term Monitoring Program (doi:10.25845/5c09bc4ff315c)",
+    "retrieved": "2026-09-27",
+    "sha256": "bde07cb10af159654ced79f4a1d1f8616671504250152e4f0a3841c31c049360",
+    "bytes": 2001,
+    "license": "CC BY 4.0"
+  },
+  "ltmp_reefs.json": {
+    "url": "https://api.aims.gov.au/data-v2.0/10.25845/5c09bc4ff315c/reef",
+    "dataset": "AIMS Long-Term Monitoring Program (doi:10.25845/5c09bc4ff315c)",
+    "retrieved": "2026-09-27",
+    "sha256": "b660b798d94628cc555ab49d4734450c76cb24f9b24023293a56e196e18fe833",
+    "bytes": 50723,
+    "license": "CC BY 4.0"
+  }
+}

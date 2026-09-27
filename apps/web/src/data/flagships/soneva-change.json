@@ -1,0 +1,205 @@
+{
+  "method": "Top-surface height per 5 cm cell from LOD3 splats (opacity > 0.3); a cell counts as changed when its height differs from the plot's first survey by more than 10 cm after removing the median vertical offset.",
+  "plots": {
+    "hb": {
+      "baseline": "2025-07-10",
+      "comparisons": [
+        {
+          "date": "2025-07-28",
+          "days": 18,
+          "cells": 12943,
+          "areaM2": 32.4,
+          "changedPct": 6,
+          "lowerPct": 3.3,
+          "higherPct": 2.7,
+          "shiftCm": 0.1
+        },
+        {
+          "date": "2025-10-29",
+          "days": 111,
+          "cells": 13493,
+          "areaM2": 33.7,
+          "changedPct": 9.1,
+          "lowerPct": 4.5,
+          "higherPct": 4.6,
+          "shiftCm": -0.3
+        },
+        {
+          "date": "2026-03-04",
+          "days": 237,
+          "cells": 13420,
+          "areaM2": 33.6,
+          "changedPct": 9.5,
+          "lowerPct": 4.8,
+          "higherPct": 4.7,
+          "shiftCm": -0.1
+        }
+      ]
+    },
+    "ootbm": {
+      "baseline": "2025-06-24",
+      "comparisons": [
+        {
+          "date": "2025-07-03",
+          "days": 9,
+          "cells": 15092,
+          "areaM2": 37.7,
+          "changedPct": 1.7,
+          "lowerPct": 0.8,
+          "higherPct": 0.9,
+          "shiftCm": -0.1
+        },
+        {
+          "date": "2025-10-07",
+          "days": 105,
+          "cells": 14939,
+          "areaM2": 37.3,
+          "changedPct": 9.5,
+          "lowerPct": 4.8,
+          "higherPct": 4.7,
+          "shiftCm": -1.7
+        }
+      ]
+    },
+    "ootbr": {
+      "baseline": "2025-07-09",
+      "comparisons": [
+        {
+          "date": "2025-07-28",
+          "days": 19,
+          "cells": 13850,
+          "areaM2": 34.6,
+          "changedPct": 4.4,
+          "lowerPct": 2.5,
+          "higherPct": 1.9,
+          "shiftCm": 0.2
+        },
+        {
+          "date": "2025-10-29",
+          "days": 112,
+          "cells": 17635,
+          "areaM2": 44.1,
+          "changedPct": 6.1,
+          "lowerPct": 3,
+          "higherPct": 3.2,
+          "shiftCm": 0.5
+        },
+        {
+          "date": "2026-03-04",
+          "days": 238,
+          "cells": 17605,
+          "areaM2": 44,
+          "changedPct": 7.7,
+          "lowerPct": 3.2,
+          "higherPct": 4.4,
+          "shiftCm": 1.3
+        }
+      ]
+    },
+    "ootsl1": {
+      "baseline": "2025-06-02",
+      "comparisons": [
+        {
+          "date": "2025-06-20",
+          "days": 18,
+          "cells": 20238,
+          "areaM2": 50.6,
+          "changedPct": 3.2,
+          "lowerPct": 1.1,
+          "higherPct": 2,
+          "shiftCm": 0.1
+        },
+        {
+          "date": "2025-10-07",
+          "days": 127,
+          "cells": 19563,
+          "areaM2": 48.9,
+          "changedPct": 8.7,
+          "lowerPct": 4.2,
+          "higherPct": 4.5,
+          "shiftCm": 0.6
+        },
+        {
+          "date": "2026-02-18",
+          "days": 261,
+          "cells": 20622,
+          "areaM2": 51.6,
+          "changedPct": 9.3,
+          "lowerPct": 3.5,
+          "higherPct": 5.7,
+          "shiftCm": 0.9
+        }
+      ]
+    },
+    "ootsr2": {
+      "baseline": "2025-07-02",
+      "comparisons": [
+        {
+          "date": "2025-07-04",
+          "days": 2,
+          "cells": 16994,
+          "areaM2": 42.5,
+          "changedPct": 2.7,
+          "lowerPct": 1.3,
+          "higherPct": 1.4,
+          "shiftCm": -0.6
+        },
+        {
+          "date": "2025-10-08",
+          "days": 98,
+          "cells": 16869,
+          "areaM2": 42.2,
+          "changedPct": 5,
+          "lowerPct": 2.3,
+          "higherPct": 2.7,
+          "shiftCm": 0.1
+        },
+        {
+          "date": "2026-03-03",
+          "days": 244,
+          "cells": 17676,
+          "areaM2": 44.2,
+          "changedPct": 7.7,
+          "lowerPct": 3.4,
+          "higherPct": 4.2,
+          "shiftCm": 0
+        }
+      ]
+    },
+    "ootsr3": {
+      "baseline": "2025-07-03",
+      "comparisons": [
+        {
+          "date": "2025-07-04",
+          "days": 1,
+          "cells": 14756,
+          "areaM2": 36.9,
+          "changedPct": 2.9,
+          "lowerPct": 1.6,
+          "higherPct": 1.3,
+          "shiftCm": 0
+        },
+        {
+          "date": "2025-10-08",
+          "days": 97,
+          "cells": 12677,
+          "areaM2": 31.7,
+          "changedPct": 4.6,
+          "lowerPct": 2.2,
+          "higherPct": 2.4,
+          "shiftCm": 0.1
+        },
+        {
+          "date": "2026-03-03",
+          "days": 243,
+          "cells": 12974,
+          "areaM2": 32.4,
+          "changedPct": 8.7,
+          "lowerPct": 3.7,
+          "higherPct": 5,
+          "shiftCm": 0.2
+        }
+      ]
+    }
+  }
+}

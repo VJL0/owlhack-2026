@@ -4,6 +4,7 @@ import { useEffect, useMemo } from "react";
 import { siteById } from "@/lib/data";
 import { useStore } from "@/lib/store";
 import { mulberry32 } from "@/features/reef/terrain";
+import { flagshipById } from "@/lib/flagshipIndex";
 
 /**
  * The crossing between globe and reef. Pure CSS animation (compositor thread),
@@ -20,7 +21,7 @@ export default function DiveOverlay() {
   // plunge → (reef ready) → surface reveal → done
   useEffect(() => {
     if (crossing !== "plunge") return;
-    const ready = (phase === "reef" && reefReady) || phase === "ascending" || phase === "region";
+    const ready = ((phase === "reef" || phase === "splat") && reefReady) || phase === "ascending" || phase === "region" || phase === "flagship";
     if (!ready) return;
     const id = window.setTimeout(() => setCrossing("surface"), reduced ? 50 : 700);
     return () => window.clearTimeout(id);
@@ -48,8 +49,12 @@ export default function DiveOverlay() {
   }, []);
 
   if (crossing === "none") return null;
-  const site = siteById(siteId);
-  const descending = phase !== "ascending" && phase !== "region";
+  const flagshipId = useStore.getState().flagshipId;
+  const toSplat = (phase === "flagship" || phase === "splat") && flagshipId;
+  const florida = siteById(siteId);
+  const f = toSplat ? flagshipById(flagshipId) : null;
+  const site = f ? { name: f.name, lat: f.lat, lon: f.lon } : florida;
+  const descending = phase !== "ascending" && phase !== "region" && !(phase === "flagship" && crossing === "surface");
 
   return (
     <div className="dive" data-stage={crossing} aria-hidden="true">
@@ -59,7 +64,7 @@ export default function DiveOverlay() {
         <div className="depth-gauge">
           <b>{site.name}</b>
           <span>
-            {Math.abs(site.lat).toFixed(4)}° N {Math.abs(site.lon).toFixed(4)}° W
+            {Math.abs(site.lat).toFixed(4)}° {site.lat < 0 ? "S" : "N"} {Math.abs(site.lon).toFixed(4)}° {site.lon < 0 ? "W" : "E"}
           </span>
         </div>
       )}

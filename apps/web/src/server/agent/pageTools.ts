@@ -40,6 +40,26 @@ export const pageToolDeclarations: FunctionDeclaration[] = [
     },
   },
   {
+    name: "go_to_flagship",
+    description:
+      "Open a flagship reef: moorea, lizard-island or soneva-fushi (evidence dossier), or florida (the nine-reef map). Use for 'take me to Moorea', 'show me Lizard Island'.",
+    parametersJsonSchema: {
+      type: "object",
+      properties: { flagship_id: { type: "string", enum: ["moorea", "lizard-island", "soneva-fushi", "florida"] } },
+      required: ["flagship_id"],
+    },
+  },
+  {
+    name: "go_to_world",
+    description: "Pull back to the whole globe with all flagship reefs. Use for 'show the world', 'all reefs', 'start over'.",
+    parametersJsonSchema: { type: "object", properties: {} },
+  },
+  {
+    name: "set_flagship_date",
+    description: "Move the evidence timeline cursor of the open flagship dossier to a date (YYYY-MM-DD). Use when the viewer asks to look at a year there.",
+    parametersJsonSchema: { type: "object", properties: { date: { type: "string", description: "YYYY-MM-DD" } }, required: ["date"] },
+  },
+  {
     name: "set_playing",
     description: "Play or pause the timeline animation through time.",
     parametersJsonSchema: { type: "object", properties: { playing: { type: "boolean" } }, required: ["playing"] },
@@ -72,6 +92,18 @@ export function toAction(name: string, a: Record<string, unknown>): UiAction | {
     case "set_playing":
       if (typeof a.playing !== "boolean") return { error: "playing must be true or false." };
       return { type: "set_playing", playing: a.playing };
+    case "go_to_flagship": {
+      const id = a.flagship_id;
+      if (id !== "moorea" && id !== "lizard-island" && id !== "soneva-fushi" && id !== "florida") return { error: `Unknown flagship_id "${String(id)}".` };
+      return { type: "go_to_flagship", flagshipId: id };
+    }
+    case "go_to_world":
+      return { type: "go_to_world" };
+    case "set_flagship_date": {
+      const d = a.date;
+      if (typeof d !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(d) || d < "1985-01-01" || d > "2026-12-31") return { error: "date must be YYYY-MM-DD between 1985-01-01 and 2026-12-31." };
+      return { type: "set_flagship_date", date: d };
+    }
   }
   return { error: `Unknown page tool "${name}".` };
 }

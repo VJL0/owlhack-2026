@@ -26,12 +26,12 @@ export default function Hero() {
           ))}
         </h1>
         <p className="hero-sub" style={{ animationDelay: `${base + 2.3}s` }}>
-          Every reef tells a story.
+          Reefs change between the times anyone looks.
           <br />
-          We find the pressures behind it.
+          We reconstruct what happened in between.
         </p>
         <div className="hero-actions" style={{ animationDelay: `${base + 3.0}s` }}>
-          <button className="btn-dive" onClick={() => setPhase("flying")} autoFocus>
+          <button className="btn-dive" onClick={() => setPhase("world")} autoFocus>
             Enter the Ocean
           </button>
           <GuideButton
@@ -39,18 +39,18 @@ export default function Hero() {
               // This click is what lets the browser play audio, so the guide can speak at once.
               setLang(lang);
               setGuide(true);
-              setPhase("flying");
+              setPhase("world");
             }}
           />
-          <button className="btn-quiet" onClick={() => setPhase("region")}>
-            Skip the flight
+          <button className="btn-quiet" onClick={() => setPhase("flying")}>
+            Fly to Florida
           </button>
           <Link className="btn-quiet" href="/data">Explore reef datasets</Link>
         </div>
       </div>
       <p className="hero-credit" style={{ animationDelay: `${base + 3.6}s` }}>
-        Florida&rsquo;s Coral Reef, 2016&ndash;2024. Heat stress from NOAA Coral Reef Watch, storm tracks from NOAA HURDAT2,
-        lionfish records from USGS.
+        Field surveys from the Moorea Coral Reef LTER and AIMS, 3D surveys from Soneva and Wildflow, heat stress from NOAA Coral Reef Watch, cyclone
+        tracks from NOAA IBTrACS and HURDAT2.
       </p>
     </section>
   );

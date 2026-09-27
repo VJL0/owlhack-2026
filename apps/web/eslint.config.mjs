@@ -9,7 +9,7 @@ const eslintConfig = defineConfig([
     // The reef scene follows the React Three Fiber model: GPU objects created in
     // useMemo are mutated every frame inside useFrame. These React Compiler
     // rules assume immutable render values, and the compiler is disabled here.
-    files: ["src/features/reef/**/*.tsx"],
+    files: ["src/features/reef/**/*.tsx", "src/features/splat/**/*.tsx"],
     rules: {
       "react-hooks/immutability": "off",
     },

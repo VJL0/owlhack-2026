@@ -1,0 +1,11 @@
+{
+  "metadata.json": {
+    "url": "https://huggingface.co/datasets/wildflow/soneva-corals/resolve/200aaf30cda920bd9b0e5d5da8838d4165c9e289/metadata.json",
+    "dataset": "wildflow/soneva-corals",
+    "revision": "200aaf30cda920bd9b0e5d5da8838d4165c9e289",
+    "retrieved": "2026-09-27",
+    "sha256": "3da18c9ca73e2605bedb9fe7a99d6ea154d51447409b976ef490e2049db68312",
+    "bytes": 37043,
+    "license": "CC BY 4.0"
+  }
+}

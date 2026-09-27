@@ -5,12 +5,16 @@ import { heatRgb } from "@/lib/colors";
 import { useStore, type Phase } from "@/lib/store";
 import { isoDate } from "@/lib/time";
 import { murAnomalyDate } from "@/lib/gibs";
+import { FLAGSHIPS, flagshipById } from "@/lib/flagshipIndex";
+import { addFlagshipDetail, addFlagshipMarkers, addGlobalReefs } from "./atlasLayers";
 
 type View = { lon: number; lat: number; h: number; heading: number; pitch: number };
 
 // Camera stations for the opening flight (degrees / metres).
-const VIEWS: Record<"intro" | "atlantic" | "florida" | "region", View> = {
+const VIEWS: Record<"intro" | "world" | "atlantic" | "florida" | "region", View> = {
   intro: { lon: -70.5, lat: -8, h: 6_600_000, heading: -12, pitch: -57.5 },
+  // the Pacific face of the Earth: Moorea and Lizard Island in view, Florida on the limb
+  world: { lon: -168, lat: -6, h: 19_000_000, heading: 0, pitch: -90 },
   atlantic: { lon: -77.5, lat: 17.5, h: 3_300_000, heading: -8, pitch: -68 },
   florida: { lon: -81.2, lat: 22.2, h: 720_000, heading: -2, pitch: -56 },
   region: { lon: -81.68, lat: 22.45, h: 315_000, heading: 0, pitch: -55 },
@@ -477,6 +481,11 @@ export function createGlobe(C: Cesium, container: HTMLElement): GlobeController 
     });
   }
 
+  // ------------------------------------------------------------ atlas layers
+  addFlagshipMarkers(C, viewer, store);
+  const removeGlobalReefs = addGlobalReefs(C, viewer, store);
+  const removeFlagshipDetail = addFlagshipDetail(C, viewer, store);
+
   // ------------------------------------------------------------ interaction
   const handler = new C.ScreenSpaceEventHandler(scene.canvas);
   // Pins are small, so pick the nearest reef within a generous radius (or its label).
@@ -499,6 +508,38 @@ export function createGlobe(C: Cesium, container: HTMLElement): GlobeController 
     const id: unknown = picked?.id?.id;
     return typeof id === "string" && id.startsWith("site:") ? id.slice(5) : null;
   };
+  // Flagship markers in the world view: nearest within a generous radius.
+  const flagshipCart = FLAGSHIPS.map((f) => ({ id: f.id, pos: C.Cartesian3.fromDegrees(f.lon, f.lat, 50) }));
+  const toCam = new C.Cartesian3();
+  // on the near side of the Earth when the surface normal faces the camera
+  const facing = (p: CesiumNS.Cartesian3) => C.Cartesian3.dot(p, C.Cartesian3.subtract(camera.positionWC, p, toCam)) > 0;
+  const pickFlagship = (pos: CesiumNS.Cartesian2) => {
+    let best: string | null = null;
+    let bestD = 44;
+    for (const f of flagshipCart) {
+      if (!facing(f.pos)) continue;
+      const p = scene.cartesianToCanvasCoordinates(f.pos, screenPos);
+      if (!p) continue;
+      const d = Math.hypot(p.x - pos.x, p.y - pos.y);
+      if (d < bestD) {
+        bestD = d;
+        best = f.id;
+      }
+    }
+    return best;
+  };
+  handler.setInputAction((e: { endPosition: CesiumNS.Cartesian2 }) => {
+    if (store.getState().phase !== "world") return;
+    const id = pickFlagship(e.endPosition);
+    scene.canvas.style.cursor = id ? "pointer" : "";
+    if (id !== store.getState().flagshipHover && (id || store.getState().flagshipHover)) store.getState().setFlagshipHover(id as never);
+  }, C.ScreenSpaceEventType.MOUSE_MOVE);
+  handler.setInputAction((e: { position: CesiumNS.Cartesian2 }) => {
+    if (store.getState().phase !== "world") return;
+    const id = pickFlagship(e.position);
+    if (id) openFlagshipOrFlorida(id);
+  }, C.ScreenSpaceEventType.LEFT_CLICK);
+
   handler.setInputAction((e: { endPosition: CesiumNS.Cartesian2 }) => {
     if (store.getState().phase !== "region") return;
     hoverSite = pickSite(e.endPosition);
@@ -563,6 +604,103 @@ export function createGlobe(C: Cesium, container: HTMLElement): GlobeController 
       tick();
     });
   const ease = (k: number) => 1 - Math.pow(1 - k, 3);
+
+  // ------------------------------------------------------------ world and flagship views
+  // The sun follows the view: mid-morning over whatever reef is on screen.
+  const SUN_DAY = C.JulianDate.fromIso8601("2024-03-20T00:00:00Z");
+  let sunAnim = 0;
+  const sunOver = (lon: number, instant = false) => {
+    const hours = (((12 - lon / 15 - 1.5) % 24) + 24) % 24;
+    const target = C.JulianDate.addSeconds(SUN_DAY, hours * 3600, new C.JulianDate());
+    const from = viewer.clock.currentTime.clone();
+    // shortest way round the clock, ignoring the date
+    let diff = C.JulianDate.secondsDifference(target, from) % 86400;
+    if (diff > 43200) diff -= 86400;
+    if (diff < -43200) diff += 86400;
+    const token = ++sunAnim;
+    if (instant || store.getState().reducedMotion) {
+      viewer.clock.currentTime = C.JulianDate.addSeconds(from, diff, new C.JulianDate());
+      return;
+    }
+    animate(2600, (k) => {
+      if (token === sunAnim) viewer.clock.currentTime = C.JulianDate.addSeconds(from, diff * ease(k), new C.JulianDate());
+    });
+  };
+
+  // Flagship framing: look at the reef from the south-east, then slide the camera so
+  // the reef sits in the open part of the screen (right of the dossier, above the timeline).
+  const STATIONS: Record<string, { lat: number; lon: number; range: number; pitch: number; heading: number }> = {
+    moorea: { lat: -17.535, lon: -149.835, range: 50_000, pitch: -58, heading: 0 },
+    "lizard-island": { lat: -14.675, lon: 145.46, range: 19_000, pitch: -56, heading: 0 },
+    "soneva-fushi": { lat: 5.1125, lon: 73.0755, range: 4_800, pitch: -60, heading: 0 },
+  };
+  const stationView = (id: string) => {
+    const st = STATIONS[id];
+    const center = C.Cartesian3.fromDegrees(st.lon, st.lat, 0);
+    const enu = C.Transforms.eastNorthUpToFixedFrame(center);
+    const h = C.Math.toRadians(st.heading);
+    const p = C.Math.toRadians(st.pitch);
+    const fwd = new C.Cartesian3(Math.sin(h) * Math.cos(p), Math.cos(h) * Math.cos(p), Math.sin(p));
+    const right = new C.Cartesian3(Math.cos(h), -Math.sin(h), 0);
+    const up = C.Cartesian3.cross(right, fwd, new C.Cartesian3());
+    const aspect = container.clientWidth / Math.max(1, container.clientHeight);
+    const fovy = (camera.frustum as CesiumNS.PerspectiveFrustum).fovy ?? C.Math.toRadians(60);
+    const viewH = 2 * st.range * Math.tan(fovy / 2);
+    const wide = aspect > 1.1 && container.clientWidth > 900;
+    // the open area sits between the dossier (left) and the side cards (right), above the timeline
+    const sx = wide ? 0.01 * viewH * aspect : 0;
+    const sy = wide ? 0.21 * viewH : 0.18 * viewH;
+    const local = C.Cartesian3.multiplyByScalar(fwd, -st.range, new C.Cartesian3());
+    C.Cartesian3.subtract(local, C.Cartesian3.multiplyByScalar(right, sx, new C.Cartesian3()), local);
+    C.Cartesian3.subtract(local, C.Cartesian3.multiplyByScalar(up, sy, new C.Cartesian3()), local);
+    return { destination: C.Matrix4.multiplyByPoint(enu, local, new C.Cartesian3()), orientation: { heading: h, pitch: p, roll: 0 } };
+  };
+
+  const openFlagshipOrFlorida = (id: string) => {
+    const s = store.getState();
+    s.setFlagshipHover(null);
+    if (id === "florida") s.setPhase("flying");
+    else s.openFlagship(id as "moorea" | "lizard-island" | "soneva-fushi");
+  };
+
+  const worldView = (): View => {
+    const hover = store.getState().flagshipHover;
+    const f = hover ? flagshipById(hover) : null;
+    const portrait = container.clientWidth / Math.max(1, container.clientHeight) < 0.9;
+    const base = f ? { ...VIEWS.world, lon: f.lon + (portrait ? 0 : 28), lat: f.lat * 0.6 } : VIEWS.world;
+    return portrait ? { ...base, h: 26_000_000 } : base;
+  };
+
+  const flyToWorld = async (instant = false) => {
+    const token = ++flightToken;
+    spinning = false;
+    tractProgress = 1;
+    satellite.alpha = 1;
+    night.alpha = 1;
+    setInputs(false);
+    const v = worldView();
+    sunOver(v.lon - 28, instant);
+    if (instant || store.getState().reducedMotion) setView(v);
+    else await fly(v, 3.2, C.EasingFunction.QUADRATIC_IN_OUT);
+    if (token !== flightToken) return;
+    setInputs(true);
+  };
+
+  const flyToFlagship = async (id: string) => {
+    const token = ++flightToken;
+    setInputs(false);
+    const st = STATIONS[id];
+    if (!st) return;
+    sunOver(st.lon);
+    const v = stationView(id);
+    if (store.getState().reducedMotion) camera.setView(v);
+    else
+      await new Promise<boolean>((resolve) =>
+        camera.flyTo({ ...v, duration: 4.2, maximumHeight: 9_000_000, easingFunction: C.EasingFunction.QUADRATIC_IN_OUT, complete: () => resolve(true), cancel: () => resolve(false) }),
+      );
+    if (token !== flightToken) return;
+    setInputs(true);
+  };
 
   // Opening: the reef draws itself on the dark side, then the city lights come up.
   // (Ground atmosphere stays on: Cesium's night-side darkening depends on it.)
@@ -669,6 +807,31 @@ export function createGlobe(C: Cesium, container: HTMLElement): GlobeController 
   };
 
   const onPhase = (phase: Phase, prev: Phase) => {
+    if (phase === "world" || phase === "flagship") {
+      viewer.useDefaultRenderLoop = true;
+      container.style.visibility = "visible";
+      store.getState().setCaption(null);
+      spinning = false;
+      tractProgress = 1;
+      satellite.alpha = 1;
+      night.alpha = 1;
+    }
+    if (phase === "world") flyToWorld(prev === "boot");
+    if (phase === "flagship") {
+      const id = store.getState().flagshipId;
+      // Back from the 3D survey: the camera is already there.
+      if (id && prev !== "splat") flyToFlagship(id);
+      else setInputs(true);
+    }
+    if (phase === "splat") {
+      setInputs(false);
+      window.setTimeout(() => {
+        if (store.getState().phase === "splat") {
+          viewer.useDefaultRenderLoop = false;
+          container.style.visibility = "hidden";
+        }
+      }, 1200);
+    }
     if (phase === "flying") flyToRegion();
     if (phase === "region") {
       setInputs(true);
@@ -704,14 +867,29 @@ export function createGlobe(C: Cesium, container: HTMLElement): GlobeController 
 
   if (process.env.NODE_ENV !== "production") Object.assign(window, { __rs: { viewer, C, VIEWS, setSun } });
 
+  let hoverTimer: number | undefined;
+  // A deep link may have moved past the intro before the globe existed.
+  const initial = store.getState().phase;
+  if (initial !== "boot" && initial !== "intro") onPhase(initial, "boot");
+
   const unsub = store.subscribe((s, p) => {
     if (s.phase !== p.phase) onPhase(s.phase, p.phase);
+    if (s.phase === "world" && s.flagshipHover !== p.flagshipHover && s.flagshipHover) {
+      // turn the globe toward the reef being pointed at (debounced, so sweeping the list is calm)
+      window.clearTimeout(hoverTimer);
+      hoverTimer = window.setTimeout(() => {
+        if (store.getState().phase === "world") flyToWorld();
+      }, 260);
+    }
     if (s.t !== p.t || s.layers !== p.layers) updateSst();
   });
 
   return {
     destroy() {
       unsub();
+      removeGlobalReefs();
+      removeFlagshipDetail();
+      window.clearTimeout(hoverTimer);
       window.clearTimeout(introFallback);
       window.clearTimeout(sstTimer);
       removePre();

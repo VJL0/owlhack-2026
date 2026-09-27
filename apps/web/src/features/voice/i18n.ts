@@ -35,6 +35,8 @@ export const STRINGS = {
     suggestions: {
       reef: ["Where am I?", "Why is this reef stressed?", "Take me back up"],
       region: ["Take me to Looe Key", "Which reef was hottest in 2023?", "What can I say?"],
+      flagship: ["What happened here in 2019?", "What is missing from this record?", "Take me to Lizard Island"],
+      world: ["Take me to Moorea", "Which reef has the longest record?", "Show me Florida"],
     },
     enterGuide: "Enter with spoken guide",
     enterGuideHint: "Narrates each scene. Press V anytime to talk.",
@@ -43,6 +45,10 @@ export const STRINGS = {
       `You're above Florida's Coral Reef: nine reefs from Biscayne to the Dry Tortugas, shown in ${month}. Press V and say a reef name to dive in, or ask a question. Say "what can I say" for help.`,
     reefArrive: (name: string, region: string) => `${name}, ${region}.`,
     reefHint: `Press V to ask about this reef, or say "take me back up".`,
+    world:
+      "The whole ocean, coloured by each reef's heat stress. Four places have records long enough to show what happened between surveys: Moorea, Lizard Island, Soneva Fushi and Florida. Choose one.",
+    flagshipArrive: (name: string, role: string) => `${name}. ${role}.`,
+    splatArrive: (plot: string) => `Inside a real 3D survey of ${plot}. Use the dates to see the same reef on other days.`,
   },
   es: {
     pill: "Pregunta al arrecife",
@@ -66,6 +72,8 @@ export const STRINGS = {
     suggestions: {
       reef: ["¿Dónde estoy?", "¿Por qué sufre este arrecife?", "Llévame arriba"],
       region: ["Llévame a Looe Key", "¿Qué arrecife tuvo más calor en 2023?", "¿Qué puedo decir?"],
+      flagship: ["¿Qué pasó aquí en 2019?", "¿Qué falta en este registro?", "Llévame a Lizard Island"],
+      world: ["Llévame a Moorea", "¿Qué arrecife tiene el registro más largo?", "Muéstrame Florida"],
     },
     enterGuide: "Entrar con guía hablada",
     enterGuideHint: "Narra cada escena. Pulsa V para hablar.",
@@ -74,5 +82,9 @@ export const STRINGS = {
       `Estás sobre el arrecife de coral de Florida: nueve arrecifes desde Biscayne hasta Dry Tortugas, en ${month}. Pulsa V y di el nombre de un arrecife para sumergirte, o haz una pregunta. Di "qué puedo decir" para obtener ayuda.`,
     reefArrive: (name: string, region: string) => `${name}, ${region}.`,
     reefHint: `Pulsa V para preguntar sobre este arrecife, o di "llévame arriba".`,
+    world:
+      "Todo el océano, coloreado por el estrés térmico de cada arrecife. Cuatro lugares tienen registros lo bastante largos para mostrar qué pasó entre muestreos: Moorea, Lizard Island, Soneva Fushi y Florida. Elige uno.",
+    flagshipArrive: (name: string, role: string) => `${name}. ${role}.`,
+    splatArrive: (plot: string) => `Dentro de un modelo 3D real de ${plot}. Usa las fechas para ver el mismo arrecife otros días.`,
   },
 } satisfies Record<Lang, unknown>;

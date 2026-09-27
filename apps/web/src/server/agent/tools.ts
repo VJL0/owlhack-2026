@@ -1,5 +1,6 @@
 import type { FunctionDeclaration } from "@google/genai";
 import { getReefData, ReefDataError } from "@/server/reef";
+import { flagshipEvidence, flagshipToolDeclaration } from "./flagshipTool";
 
 // The only way the agent reaches data. Gemini picks a tool and arguments;
 // our code runs it. No free-form SQL, so a bad model guess cannot hurt the database.
@@ -53,6 +54,7 @@ export const toolDeclarations: FunctionDeclaration[] = [
       required: ["metric", "from", "to"],
     },
   },
+  flagshipToolDeclaration,
 ];
 
 type Args = Record<string, unknown>;
@@ -107,6 +109,8 @@ export async function runTool(name: string, args: Args): Promise<unknown> {
         const rows = await Promise.all(sites.map(async (s) => ({ site: s.name, siteId: s.id, value: await metricValue(metric, s.id, f, t) })));
         return { metric, from: f, to: t, ranking: rows.sort((x, y) => y.value - x.value) };
       }
+      case "get_flagship_evidence":
+        return flagshipEvidence(args);
       default:
         return { error: `Unknown tool "${name}".` };
     }

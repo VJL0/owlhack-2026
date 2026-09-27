@@ -2,6 +2,7 @@
 
 import { useStore } from "./store";
 import { dateToDay } from "./time";
+import { decimalYear } from "./flagships";
 import type { UiAction } from "./voiceActions";
 
 /** Leave the reef: cover with water, hand back to the globe, reveal. */
@@ -12,6 +13,23 @@ export function ascend() {
   s.setPressuresOpen(false);
   s.setCrossing("plunge");
   window.setTimeout(() => useStore.getState().setPhase("ascending"), s.reducedMotion ? 50 : 750);
+}
+
+/** Soneva Fushi: dive from the dossier into a real 3D survey, through the same water crossing. */
+export function enterSplat(plot?: string) {
+  const s = useStore.getState();
+  if (s.phase !== "flagship" || s.crossing !== "none") return;
+  if (plot) s.setSplat(plot, 0);
+  s.setCrossing("plunge");
+  window.setTimeout(() => useStore.getState().setPhase("splat"), s.reducedMotion ? 50 : 750);
+}
+
+/** Back up from the 3D survey to the dossier. */
+export function exitSplat() {
+  const s = useStore.getState();
+  if (s.phase !== "splat" || s.crossing !== "none") return;
+  s.setCrossing("plunge");
+  window.setTimeout(() => useStore.getState().setPhase("flagship"), s.reducedMotion ? 50 : 750);
 }
 
 /** Resolve once the map (region view) is showing. */
@@ -31,6 +49,12 @@ function whenOnMap(): Promise<void> {
 export async function goToReef(siteId: string) {
   const s = useStore.getState();
   if (s.phase === "reef" && s.siteId === siteId) return;
+  // From the world or a flagship the dive flight starts wherever the camera is.
+  if (s.phase === "world" || s.phase === "flagship") {
+    s.setSite(siteId);
+    s.setPhase("diving");
+    return;
+  }
   if (s.phase === "reef") ascend();
   await whenOnMap();
   const now = useStore.getState();
@@ -45,7 +69,9 @@ export function runAction(a: UiAction) {
       void goToReef(a.siteId);
       break;
     case "go_to_map":
-      ascend();
+      if (s.phase === "reef") ascend();
+      else if (s.phase === "splat") exitSplat();
+      else if (s.phase === "flagship") s.setPhase("world");
       break;
     case "set_date":
       s.setT(dateToDay(Date.parse(`${a.date}T00:00:00Z`)));
@@ -55,6 +81,18 @@ export function runAction(a: UiAction) {
       break;
     case "set_playing":
       s.setPlaying(a.playing);
+      break;
+    case "go_to_world":
+      s.setPlaying(false);
+      s.setPhase("world");
+      break;
+    case "go_to_flagship":
+      s.setPlaying(false);
+      if (a.flagshipId === "florida") s.setPhase(s.phase === "reef" || s.phase === "region" ? "region" : "flying");
+      else s.openFlagship(a.flagshipId);
+      break;
+    case "set_flagship_date":
+      s.setFlagshipT(decimalYear(a.date));
       break;
   }
 }

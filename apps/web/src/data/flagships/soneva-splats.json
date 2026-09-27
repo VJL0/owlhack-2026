@@ -1,0 +1,149 @@
+{
+  "dataset": "wildflow/soneva-corals",
+  "revision": "200aaf30cda920bd9b0e5d5da8838d4165c9e289",
+  "license": "CC BY 4.0",
+  "plots": {
+    "ootsl1": {
+      "frame": {
+        "origin": [
+          0.6250636577606201,
+          -2.433777689933777,
+          -6.814385414123535
+        ],
+        "box": {
+          "x": [
+            -4.08172025680542,
+            5.3318475723266605
+          ],
+          "y": [
+            -7.670628452301026,
+            2.8030730724334716
+          ],
+          "z": [
+            -10.372069931030273,
+            -4.178826236724854
+          ]
+        },
+        "up": "+z",
+        "units": "m"
+      },
+      "surveys": [
+        {
+          "survey": "maldives_soneva_ootsl1_20250602",
+          "date": "2025-06-02",
+          "file": "/splats/soneva/ootsl1/20250602-lod2.spz",
+          "lod": 2,
+          "splats": 444482,
+          "sourceSplats": 576687,
+          "bytes": 6533554,
+          "source": "https://huggingface.co/datasets/wildflow/soneva-corals/resolve/200aaf30cda920bd9b0e5d5da8838d4165c9e289/maldives_soneva_ootsl1_20250602/splats/ply/lod2.ply",
+          "sourceSha256": "34ee1a1dba6767cfbeb48ebf52be505493ff6d680f983a77d1e09f629e2e5d5f"
+        },
+        {
+          "survey": "maldives_soneva_ootsl1_20250620",
+          "date": "2025-06-20",
+          "file": "/splats/soneva/ootsl1/20250620-lod2.spz",
+          "lod": 2,
+          "splats": 444693,
+          "sourceSplats": 567865,
+          "bytes": 6526937,
+          "source": "https://huggingface.co/datasets/wildflow/soneva-corals/resolve/200aaf30cda920bd9b0e5d5da8838d4165c9e289/maldives_soneva_ootsl1_20250620/splats/ply/lod2.ply",
+          "sourceSha256": "0e0f4959d2c967a8acfe310a4e547c159977bec24242ce96cad5fb8ba8956fd3"
+        },
+        {
+          "survey": "maldives_soneva_ootsl1_20251007",
+          "date": "2025-10-07",
+          "file": "/splats/soneva/ootsl1/20251007-lod2.spz",
+          "lod": 2,
+          "splats": 386280,
+          "sourceSplats": 459442,
+          "bytes": 5705299,
+          "source": "https://huggingface.co/datasets/wildflow/soneva-corals/resolve/200aaf30cda920bd9b0e5d5da8838d4165c9e289/maldives_soneva_ootsl1_20251007/splats/ply/lod2.ply",
+          "sourceSha256": "8f71b015e3e991e3a6a26dcca6e57eaaa980dc4fc2c030346af32e2be1a9098c"
+        },
+        {
+          "survey": "maldives_soneva_ootsl1_20260218",
+          "date": "2026-02-18",
+          "file": "/splats/soneva/ootsl1/20260218-lod2.spz",
+          "lod": 2,
+          "splats": 495838,
+          "sourceSplats": 620591,
+          "bytes": 7299424,
+          "source": "https://huggingface.co/datasets/wildflow/soneva-corals/resolve/200aaf30cda920bd9b0e5d5da8838d4165c9e289/maldives_soneva_ootsl1_20260218/splats/ply/lod2.ply",
+          "sourceSha256": "be1091ef6ec5e2d74c2aca6a189ffbe47e45615395f6c8cdd51403c569731c69"
+        }
+      ]
+    },
+    "hb": {
+      "frame": {
+        "origin": [
+          0.6230926513671877,
+          -1.5094102025032046,
+          -2.18346905708313
+        ],
+        "box": {
+          "x": [
+            -3.2821024894714355,
+            4.528287792205811
+          ],
+          "y": [
+            -5.36318006515503,
+            2.3443596601486205
+          ],
+          "z": [
+            -4.230152702331543,
+            -0.6840704917907715
+          ]
+        },
+        "up": "+z",
+        "units": "m"
+      },
+      "surveys": [
+        {
+          "survey": "maldives_soneva_hb_20250710",
+          "date": "2025-07-10",
+          "file": "/splats/soneva/hb/20250710-lod2.spz",
+          "lod": 2,
+          "splats": 444422,
+          "sourceSplats": 535358,
+          "bytes": 6488978,
+          "source": "https://huggingface.co/datasets/wildflow/soneva-corals/resolve/200aaf30cda920bd9b0e5d5da8838d4165c9e289/maldives_soneva_hb_20250710/splats/ply/lod2.ply",
+          "sourceSha256": "7afe9710a84ecc6746d744f89b10f7cffc8599cf09eb78045a4651af5a5f04f9"
+        },
+        {
+          "survey": "maldives_soneva_hb_20250728",
+          "date": "2025-07-28",
+          "file": "/splats/soneva/hb/20250728-lod2.spz",
+          "lod": 2,
+          "splats": 500819,
+          "sourceSplats": 594928,
+          "bytes": 7287018,
+          "source": "https://huggingface.co/datasets/wildflow/soneva-corals/resolve/200aaf30cda920bd9b0e5d5da8838d4165c9e289/maldives_soneva_hb_20250728/splats/ply/lod2.ply",
+          "sourceSha256": "fb992b141aec0ce298df085e17b906e591f9c64ce4735ffbc76bc5a7262715c3"
+        },
+        {
+          "survey": "maldives_soneva_hb_20251029",
+          "date": "2025-10-29",
+          "file": "/splats/soneva/hb/20251029-lod2.spz",
+          "lod": 2,
+          "splats": 449956,
+          "sourceSplats": 543250,
+          "bytes": 6563776,
+          "source": "https://huggingface.co/datasets/wildflow/soneva-corals/resolve/200aaf30cda920bd9b0e5d5da8838d4165c9e289/maldives_soneva_hb_20251029/splats/ply/lod2.ply",
+          "sourceSha256": "f6eaf32763899c2b14ecfbe103744fc09fefbe5b562ccb88deb6f8ebf243c8b7"
+        },
+        {
+          "survey": "maldives_soneva_hb_20260304",
+          "date": "2026-03-04",
+          "file": "/splats/soneva/hb/20260304-lod2.spz",
+          "lod": 2,
+          "splats": 448020,
+          "sourceSplats": 533454,
+          "bytes": 6562073,
+          "source": "https://huggingface.co/datasets/wildflow/soneva-corals/resolve/200aaf30cda920bd9b0e5d5da8838d4165c9e289/maldives_soneva_hb_20260304/splats/ply/lod2.ply",
+          "sourceSha256": "2614021e3ab0b83146c9f4107ea1acdd5a1677b489f70701607f38f95941009f"
+        }
+      ]
+    }
+  }
+}

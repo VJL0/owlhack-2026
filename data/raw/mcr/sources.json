@@ -1,0 +1,87 @@
+{
+  "coral": {
+    "file": "coral_wide.csv",
+    "package": "knb-lter-mcr.4.44",
+    "entity": "Percent Cover - Wide Table",
+    "url": "https://pasta.lternet.edu/package/data/eml/knb-lter-mcr/4/44/c0c1055650f980f3bf8021b6686786b4",
+    "retrieved": "2026-09-27",
+    "sha256": "284a2a35e0d42bdb08b4c15f7dc29c4b0d1419859e338e80a7101aa6545d3504",
+    "bytes": 1954055,
+    "license": "CC BY 4.0"
+  },
+  "cots": {
+    "file": "cots.csv",
+    "package": "knb-lter-mcr.1039.13",
+    "entity": "COTS_abundance",
+    "url": "https://pasta.lternet.edu/package/data/eml/knb-lter-mcr/1039/13/e41a5f8218737b1d03c5baa845b4c480",
+    "retrieved": "2026-09-27",
+    "sha256": "e377d6ae64b6281757af0f9e9ba50b729b0e9d694e0103b4dfbd22e22d810de2",
+    "bytes": 39351,
+    "license": "CC BY 4.0"
+  },
+  "bleaching2019": {
+    "file": "bleaching2019_colonies.csv",
+    "package": "knb-lter-mcr.5050.1",
+    "entity": "Resilience Plots",
+    "url": "https://pasta.lternet.edu/package/data/eml/knb-lter-mcr/5050/1/4dd5cdfec741b8d5eaa32858f8cf0f01",
+    "retrieved": "2026-09-27",
+    "sha256": "ba86b229627522459bfc583acd66b3f5abc5debc1fd30a9bc1dbcb6b7257e285",
+    "bytes": 862668,
+    "license": "CC BY 4.0"
+  },
+  "lagoonDaily": {
+    "file": "lagoon_daily.csv",
+    "package": "knb-lter-mcr.1045.7",
+    "entity": "Temperature Summary by Day",
+    "url": "https://pasta.lternet.edu/package/data/eml/knb-lter-mcr/1045/7/7a8090507e95d40ba98d837388f7c506",
+    "retrieved": "2026-09-27",
+    "sha256": "0a014fcf6ea966ada5f8a662b53c0936a6980cdc4d5dcadaf2b64944e0b00877",
+    "bytes": 3250702,
+    "license": "CC BY 4.0",
+    "reduced": "site, local date, daily mean and max temperature"
+  },
+  "lagoonSites": {
+    "file": "lagoon_sites.csv",
+    "package": "knb-lter-mcr.1045.7",
+    "entity": "Lagoon Bottom Mount Thermistor Locations (KMZ)",
+    "url": "https://pasta.lternet.edu/package/data/eml/knb-lter-mcr/1045/7/79411816d26d08c38bbf4227495c2835",
+    "retrieved": "2026-09-27",
+    "sha256": "484c5cc00edd9012a9615ef7f68391c3d7c31a59f9e33a2ea545c90e1b4887de",
+    "bytes": 3971,
+    "license": "CC BY 4.0",
+    "reduced": "placemark name, latitude, longitude from doc.kml"
+  },
+  "fish": {
+    "file": "fish_biomass_transect.csv",
+    "package": "knb-lter-mcr.6.65",
+    "entity": "Annual Fish Surveys",
+    "url": "https://pasta.lternet.edu/package/data/eml/knb-lter-mcr/6/65/ac2c7a859ce8595ec1339e8530b9ba50",
+    "retrieved": "2026-09-27",
+    "sha256": "0f9e27cb6cd1268f5769937352ed800286578896bcfaf634c475dee02b2bd564",
+    "bytes": 22796961,
+    "license": "CC BY 4.0",
+    "reduced": "sum of Biomass / swath area (1 m: 50 m², 5 m: 250 m²) per transect and Coarse_Trophic"
+  },
+  "thermistorLter0": {
+    "file": "thermistor_daily_lter_0.csv",
+    "package": "knb-lter-mcr.1035.18",
+    "entity": "MCR_LTER00_BackreefForereef_BottomMountThermistors_20250522",
+    "url": "https://pasta.lternet.edu/package/data/eml/knb-lter-mcr/1035/18/a7a0ae7c22a454a47424d3361b6c27ad",
+    "retrieved": "2026-09-27",
+    "sha256": "6f6da9f3450754d575328bdabdaa94cd3da4fab407c2042265b85a8c3bc73edb",
+    "bytes": 318275573,
+    "license": "CC BY 4.0",
+    "reduced": "daily mean/max of temperature_c by reef_type_code, sensor_depth_m and local date; days with < 24 readings dropped"
+  },
+  "thermistorLter2": {
+    "file": "thermistor_daily_lter_2.csv",
+    "package": "knb-lter-mcr.1035.18",
+    "entity": "MCR_LTER02_BackreefForereef_BottomMountThermistors_20250522",
+    "url": "https://pasta.lternet.edu/package/data/eml/knb-lter-mcr/1035/18/fa4fcd8b5d790a19df8c8296fcbc6cd5",
+    "retrieved": "2026-09-27",
+    "sha256": "007d735bb436828c96c2c649adf0777db76f35aaa11b513d88db037214cdef1e",
+    "bytes": 496590450,
+    "license": "CC BY 4.0",
+    "reduced": "daily mean/max of temperature_c by reef_type_code, sensor_depth_m and local date; days with < 24 readings dropped"
+  }
+}

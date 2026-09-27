@@ -1,0 +1,26 @@
+{
+  "ibtracs.SP.list.v04r01.csv": {
+    "url": "https://www.ncei.noaa.gov/data/international-best-track-archive-for-climate-stewardship-ibtracs/v04r01/access/csv/ibtracs.SP.list.v04r01.csv",
+    "retrieved": "2026-09-27",
+    "sha256": "631f76b95c77a6a4e409233466a0d501bb4848324e421fc58e228efea2086c44",
+    "bytes": 35482417,
+    "storms": 96,
+    "license": "NOAA NCEI, public domain (cite IBTrACS v04r01)"
+  },
+  "ibtracs.SI.list.v04r01.csv": {
+    "url": "https://www.ncei.noaa.gov/data/international-best-track-archive-for-climate-stewardship-ibtracs/v04r01/access/csv/ibtracs.SI.list.v04r01.csv",
+    "retrieved": "2026-09-27",
+    "sha256": "5092b2c988d0d027c8c54ff4ba6040f8070c952f42920dd4e47391359317e7c9",
+    "bytes": 77540410,
+    "storms": 18,
+    "license": "NOAA NCEI, public domain (cite IBTrACS v04r01)"
+  },
+  "ibtracs.NI.list.v04r01.csv": {
+    "url": "https://www.ncei.noaa.gov/data/international-best-track-archive-for-climate-stewardship-ibtracs/v04r01/access/csv/ibtracs.NI.list.v04r01.csv",
+    "retrieved": "2026-09-27",
+    "sha256": "eafa65b9fb3ec1651a9758f9b08039f3a76bd97f50609ff3c7b90db39c8abbc7",
+    "bytes": 27882735,
+    "storms": 10,
+    "license": "NOAA NCEI, public domain (cite IBTrACS v04r01)"
+  }
+}

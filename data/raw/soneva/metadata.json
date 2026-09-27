@@ -1,0 +1,1394 @@
+{
+  "maldives_soneva_hb_20250710": {
+    "capture_date": "2025-07-10",
+    "scalebar_length_m": 0.5,
+    "scalebar_depth_m": {
+      "N": 2.6,
+      "W": 1.9,
+      "SE": 1.9
+    },
+    "corners": [
+      {
+        "lat": 5.115958861964,
+        "lon": 73.075207311707,
+        "notes": "SW corner"
+      }
+    ],
+    "raw": {
+      "dir": "maldives_soneva_hb_20250710/raw",
+      "img_count": 571,
+      "img_size": "1.52 GB"
+    },
+    "site": "Host Beach",
+    "notes": "Reef flat on the right of HB ropes (looking out to sea)",
+    "scalebars": [
+      {
+        "direction": "W",
+        "distance_m": 0.5,
+        "depth_m": 1.7,
+        "markers": [
+          {
+            "projections": [
+              {
+                "image": "raw/10.07.25 LHS/G0019791.JPG",
+                "colmap_image_id": 206,
+                "pixel_x": 4114.33594,
+                "pixel_y": 1012.19598
+              },
+              {
+                "image": "raw/10.07.25 RHS/G0016051.JPG",
+                "colmap_image_id": 494,
+                "pixel_x": 2403.375,
+                "pixel_y": 2996.55688
+              }
+            ]
+          },
+          {
+            "projections": [
+              {
+                "image": "raw/10.07.25 LHS/G0019791.JPG",
+                "colmap_image_id": 206,
+                "pixel_x": 3517.96997,
+                "pixel_y": 2068.05713
+              },
+              {
+                "image": "raw/10.07.25 RHS/G0016051.JPG",
+                "colmap_image_id": 494,
+                "pixel_x": 1247.65906,
+                "pixel_y": 4657.46582
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "direction": "N",
+        "distance_m": 0.5,
+        "depth_m": 2.6,
+        "markers": [
+          {
+            "projections": [
+              {
+                "image": "raw/10.07.25 RHS/G0015910.JPG",
+                "colmap_image_id": 353,
+                "pixel_x": 1731.77161,
+                "pixel_y": 3324.18774
+              }
+            ]
+          },
+          {
+            "projections": [
+              {
+                "image": "raw/10.07.25 RHS/G0015907.JPG",
+                "colmap_image_id": 350,
+                "pixel_x": 3143.06348,
+                "pixel_y": 2337.98364
+              },
+              {
+                "image": "raw/10.07.25 RHS/G0015910.JPG",
+                "colmap_image_id": 353,
+                "pixel_x": 3211.07764,
+                "pixel_y": 4072.34253
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "direction": "SE",
+        "distance_m": 0.5,
+        "depth_m": 2.1,
+        "markers": [
+          {
+            "projections": [
+              {
+                "image": "raw/10.07.25 LHS/G0019760.JPG",
+                "colmap_image_id": 175,
+                "pixel_x": 2714.95752,
+                "pixel_y": 729.868774
+              },
+              {
+                "image": "raw/10.07.25 LHS/G0019766.JPG",
+                "colmap_image_id": 181,
+                "pixel_x": 2703.99683,
+                "pixel_y": 3080.92383
+              }
+            ]
+          },
+          {
+            "projections": [
+              {
+                "image": "raw/10.07.25 LHS/G0019760.JPG",
+                "colmap_image_id": 175,
+                "pixel_x": 4402.89453,
+                "pixel_y": 1168.29395
+              },
+              {
+                "image": "raw/10.07.25 LHS/G0019766.JPG",
+                "colmap_image_id": 181,
+                "pixel_x": 4452.21729,
+                "pixel_y": 3316.57739
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "maldives_soneva_hb_20250728": {
+    "capture_date": "2025-07-28",
+    "scalebar_length_m": 0.5,
+    "scalebar_depth_m": {
+      "NE": 2.5,
+      "S": 2.1,
+      "W": 2.2
+    },
+    "corners": [
+      {
+        "lat": 5.115958861964,
+        "lon": 73.075207311707,
+        "notes": "SW corner"
+      }
+    ],
+    "raw": {
+      "dir": "maldives_soneva_hb_20250728/raw",
+      "img_count": 817,
+      "img_size": "2.34 GB"
+    },
+    "site": "Host Beach",
+    "notes": "Reef flat on the right of HB ropes (looking out to sea)"
+  },
+  "maldives_soneva_hb_20251029": {
+    "capture_date": "2025-10-29",
+    "scalebar_length_m": 0.5,
+    "scalebar_depth_m": {
+      "I": 2.4,
+      "II": 1.7,
+      "III": 1.7
+    },
+    "corners": [
+      {
+        "lat": 5.115958861964,
+        "lon": 73.075207311707,
+        "notes": "SW corner"
+      }
+    ],
+    "raw": {
+      "dir": "maldives_soneva_hb_20251029/raw",
+      "img_count": 1337,
+      "img_size": "3.82 GB"
+    },
+    "site": "Host Beach",
+    "notes": "Reef flat on the right of HB ropes (looking out to sea)"
+  },
+  "maldives_soneva_hb_20260304": {
+    "capture_date": "2026-03-04",
+    "scalebar_length_m": 0.5,
+    "scalebar_depth_m": {},
+    "corners": [
+      {
+        "lat": 5.115958861964,
+        "lon": 73.075207311707,
+        "notes": "SW corner"
+      }
+    ],
+    "raw": {
+      "dir": "maldives_soneva_hb_20260304/raw",
+      "img_count": 667,
+      "img_size": "1.91 GB"
+    },
+    "site": "Host Beach",
+    "notes": "Reef flat on the right of HB ropes (looking out to sea)"
+  },
+  "maldives_soneva_ootbm_20250624": {
+    "capture_date": "2025-06-24",
+    "scalebar_length_m": 0.5,
+    "scalebar_depth_m": {
+      "W": 4.2,
+      "NE": 4.0,
+      "SE": 3.4
+    },
+    "corners": [
+      {
+        "lat": 5.1150760326,
+        "lon": 73.07076428,
+        "notes": "SW corner"
+      }
+    ],
+    "raw": {
+      "dir": "maldives_soneva_ootbm_20250624/raw",
+      "img_count": 938,
+      "img_size": "2.49 GB"
+    },
+    "site": "OOTB",
+    "notes": "At crest next just to the left of OOTB M ropes",
+    "scalebars": [
+      {
+        "direction": "W",
+        "distance_m": 0.5,
+        "depth_m": 4.2,
+        "markers": [
+          {
+            "projections": [
+              {
+                "image": "raw/24.06.25 RHS/G0011618.JPG",
+                "colmap_image_id": 563,
+                "pixel_x": 2856.45093,
+                "pixel_y": 2235.4541
+              },
+              {
+                "image": "raw/24.06.25 RHS/G0011620.JPG",
+                "colmap_image_id": 565,
+                "pixel_x": 2898.57202,
+                "pixel_y": 3213.5979
+              }
+            ]
+          },
+          {
+            "projections": [
+              {
+                "image": "raw/24.06.25 RHS/G0011622.JPG",
+                "colmap_image_id": 567,
+                "pixel_x": 2257.39648,
+                "pixel_y": 1776.80298
+              },
+              {
+                "image": "raw/24.06.25 RHS/G0011623.JPG",
+                "colmap_image_id": 568,
+                "pixel_x": 2219.95557,
+                "pixel_y": 2534.98145
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "direction": "NE",
+        "distance_m": 0.5,
+        "depth_m": 4.0,
+        "markers": [
+          {
+            "projections": [
+              {
+                "image": "raw/24.06.25 LHS/G0012369.JPG",
+                "colmap_image_id": 277,
+                "pixel_x": 4370.0127,
+                "pixel_y": 3582.76416
+              },
+              {
+                "image": "raw/24.06.25 LHS/G0012370.JPG",
+                "colmap_image_id": 278,
+                "pixel_x": 4419.33545,
+                "pixel_y": 3862.26025
+              },
+              {
+                "image": "raw/24.06.25 LHS/G0012466.JPG",
+                "colmap_image_id": 374,
+                "pixel_x": 984.405457,
+                "pixel_y": 313.498871
+              },
+              {
+                "image": "raw/24.06.25 RHS/G0011804.JPG",
+                "colmap_image_id": 749,
+                "pixel_x": 1117.86133,
+                "pixel_y": 3945.93604
+              }
+            ]
+          },
+          {
+            "projections": [
+              {
+                "image": "raw/24.06.25 LHS/G0012369.JPG",
+                "colmap_image_id": 277,
+                "pixel_x": 4189.16211,
+                "pixel_y": 1231.70911
+              },
+              {
+                "image": "raw/24.06.25 LHS/G0012370.JPG",
+                "colmap_image_id": 278,
+                "pixel_x": 4227.52441,
+                "pixel_y": 1587.92957
+              },
+              {
+                "image": "raw/24.06.25 LHS/G0012466.JPG",
+                "colmap_image_id": 374,
+                "pixel_x": 1639.62134,
+                "pixel_y": 2012.38025
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "direction": "SE",
+        "distance_m": 0.5,
+        "depth_m": 3.4,
+        "markers": [
+          {
+            "projections": [
+              {
+                "image": "raw/24.06.25 RHS/G0011878.JPG",
+                "colmap_image_id": 823,
+                "pixel_x": 340.763153,
+                "pixel_y": 1223.42151
+              },
+              {
+                "image": "raw/24.06.25 RHS/G0011880.JPG",
+                "colmap_image_id": 825,
+                "pixel_x": 321.022491,
+                "pixel_y": 2871.48877
+              }
+            ]
+          },
+          {
+            "projections": [
+              {
+                "image": "raw/24.06.25 RHS/G0011876.JPG",
+                "colmap_image_id": 821,
+                "pixel_x": 3335.47388,
+                "pixel_y": 884.570435
+              },
+              {
+                "image": "raw/24.06.25 RHS/G0011878.JPG",
+                "colmap_image_id": 823,
+                "pixel_x": 3399.58081,
+                "pixel_y": 2789.46289
+              },
+              {
+                "image": "raw/24.06.25 RHS/G0011880.JPG",
+                "colmap_image_id": 825,
+                "pixel_x": 3328.44653,
+                "pixel_y": 4336.64404
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "maldives_soneva_ootbm_20250703": {
+    "capture_date": "2025-07-03",
+    "scalebar_length_m": 0.5,
+    "scalebar_depth_m": {
+      "NW": 4.4,
+      "SW": 4.2,
+      "SE": 3.2
+    },
+    "corners": [
+      {
+        "lat": 5.1150760326,
+        "lon": 73.07076428,
+        "notes": "SW corner"
+      }
+    ],
+    "raw": {
+      "dir": "maldives_soneva_ootbm_20250703/raw",
+      "img_count": 1039,
+      "img_size": "2.77 GB"
+    },
+    "site": "OOTB",
+    "notes": "At crest next just to the left of OOTB M ropes"
+  },
+  "maldives_soneva_ootbm_20251007": {
+    "capture_date": "2025-10-07",
+    "scalebar_length_m": 0.5,
+    "scalebar_depth_m": {
+      "NE": 4.0,
+      "SW": 4.2,
+      "SE": 3.2
+    },
+    "corners": [
+      {
+        "lat": 5.1150760326,
+        "lon": 73.07076428,
+        "notes": "SW corner"
+      }
+    ],
+    "raw": {
+      "dir": "maldives_soneva_ootbm_20251007/raw",
+      "img_count": 720,
+      "img_size": "2.06 GB"
+    },
+    "site": "OOTB",
+    "notes": "At crest next just to the left of OOTB M ropes"
+  },
+  "maldives_soneva_ootbr_20250709": {
+    "capture_date": "2025-07-09",
+    "scalebar_length_m": 0.5,
+    "scalebar_depth_m": {
+      "N": 5.4,
+      "SW": 5.4,
+      "SE": 4.9
+    },
+    "corners": [
+      {
+        "lat": 5.116108662173,
+        "lon": 5.116108662173
+      }
+    ],
+    "raw": {
+      "dir": "maldives_soneva_ootbr_20250709/raw",
+      "img_count": 943,
+      "img_size": "2.52 GB"
+    },
+    "site": "OOTB R",
+    "notes": "Directly in front of OOTB R ropes",
+    "scalebars": [
+      {
+        "direction": "N",
+        "distance_m": 0.5,
+        "depth_m": 5.4,
+        "markers": [
+          {
+            "projections": [
+              {
+                "image": "raw/09.07.25 RHS/G0015565.JPG",
+                "colmap_image_id": 661,
+                "pixel_x": 3105.29126,
+                "pixel_y": 3060.96069
+              },
+              {
+                "image": "raw/09.07.25 RHS/G0015612.JPG",
+                "colmap_image_id": 708,
+                "pixel_x": 1941.70483,
+                "pixel_y": 1540.00757
+              }
+            ]
+          },
+          {
+            "projections": [
+              {
+                "image": "raw/09.07.25 RHS/G0015565.JPG",
+                "colmap_image_id": 661,
+                "pixel_x": 2353.39136,
+                "pixel_y": 1156.91028
+              },
+              {
+                "image": "raw/09.07.25 RHS/G0015612.JPG",
+                "colmap_image_id": 708,
+                "pixel_x": 2853.70483,
+                "pixel_y": 3515.53125
+              },
+              {
+                "image": "raw/09.07.25 RHS/G0015613.JPG",
+                "colmap_image_id": 709,
+                "pixel_x": 2853.70483,
+                "pixel_y": 4113.04883
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "direction": "SE",
+        "distance_m": 0.5,
+        "depth_m": 4.9,
+        "markers": [
+          {
+            "projections": [
+              {
+                "image": "raw/09.07.25 LHS/G0019418.JPG",
+                "colmap_image_id": 300,
+                "pixel_x": 3381.83447,
+                "pixel_y": 3505.15674
+              },
+              {
+                "image": "raw/09.07.25 RHS/G0015671.JPG",
+                "colmap_image_id": 767,
+                "pixel_x": 446.675507,
+                "pixel_y": 1527.75598
+              }
+            ]
+          },
+          {
+            "projections": [
+              {
+                "image": "raw/09.07.25 LHS/G0019415.JPG",
+                "colmap_image_id": 297,
+                "pixel_x": 2377.50171,
+                "pixel_y": 855.234314
+              },
+              {
+                "image": "raw/09.07.25 LHS/G0019416.JPG",
+                "colmap_image_id": 298,
+                "pixel_x": 2410.08716,
+                "pixel_y": 980.921021
+              },
+              {
+                "image": "raw/09.07.25 LHS/G0019418.JPG",
+                "colmap_image_id": 300,
+                "pixel_x": 2421.23706,
+                "pixel_y": 1517.25342
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "direction": "SW",
+        "distance_m": 0.5,
+        "depth_m": 5.4,
+        "markers": [
+          {
+            "projections": [
+              {
+                "image": "raw/09.07.25 LHS/G0019288.JPG",
+                "colmap_image_id": 170,
+                "pixel_x": 2716.4812,
+                "pixel_y": 2438.97778
+              },
+              {
+                "image": "raw/09.07.25 RHS/G0015622.JPG",
+                "colmap_image_id": 718,
+                "pixel_x": 3843.97583,
+                "pixel_y": 1473.50867
+              },
+              {
+                "image": "raw/09.07.25 RHS/G0015627.JPG",
+                "colmap_image_id": 723,
+                "pixel_x": 3684.35767,
+                "pixel_y": 2826.71289
+              }
+            ]
+          },
+          {
+            "projections": [
+              {
+                "image": "raw/09.07.25 LHS/G0019284.JPG",
+                "colmap_image_id": 166,
+                "pixel_x": 2170.35229,
+                "pixel_y": 2398.31201
+              },
+              {
+                "image": "raw/09.07.25 LHS/G0019287.JPG",
+                "colmap_image_id": 169,
+                "pixel_x": 2378.78003,
+                "pixel_y": 3979.17676
+              },
+              {
+                "image": "raw/09.07.25 RHS/G0015622.JPG",
+                "colmap_image_id": 718,
+                "pixel_x": 3951.3208,
+                "pixel_y": 402.884186
+              },
+              {
+                "image": "raw/09.07.25 RHS/G0015627.JPG",
+                "colmap_image_id": 723,
+                "pixel_x": 3855.64233,
+                "pixel_y": 1510.35718
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "maldives_soneva_ootbr_20250728": {
+    "capture_date": "2025-07-28",
+    "scalebar_length_m": 0.5,
+    "scalebar_depth_m": {
+      "NE": 4.9,
+      "NW": 5.3,
+      "S": 5.0
+    },
+    "corners": [
+      {
+        "lat": 5.116108662173,
+        "lon": 5.116108662173
+      }
+    ],
+    "raw": {
+      "dir": "maldives_soneva_ootbr_20250728/raw",
+      "img_count": 584,
+      "img_size": "1.67 GB"
+    },
+    "site": "OOTB R",
+    "notes": "Directly in front of OOTB R ropes"
+  },
+  "maldives_soneva_ootbr_20251029": {
+    "capture_date": "2025-10-29",
+    "scalebar_length_m": 0.5,
+    "scalebar_depth_m": {
+      "I": 5.5,
+      "II": 4.4,
+      "III": 4.5
+    },
+    "corners": [
+      {
+        "lat": 5.116108662173,
+        "lon": 5.116108662173
+      }
+    ],
+    "raw": {
+      "dir": "maldives_soneva_ootbr_20251029/raw",
+      "img_count": 723,
+      "img_size": "2.07 GB"
+    },
+    "site": "OOTB R",
+    "notes": "Directly in front of OOTB R ropes"
+  },
+  "maldives_soneva_ootbr_20260304": {
+    "capture_date": "2026-03-04",
+    "scalebar_length_m": 0.5,
+    "scalebar_depth_m": {},
+    "corners": [
+      {
+        "lat": 5.116108662173,
+        "lon": 5.116108662173
+      }
+    ],
+    "raw": {
+      "dir": "maldives_soneva_ootbr_20260304/raw",
+      "img_count": 1040,
+      "img_size": "2.98 GB"
+    },
+    "site": "OOTB R",
+    "notes": "Directly in front of OOTB R ropes"
+  },
+  "maldives_soneva_ootsl1_20250602": {
+    "capture_date": "2025-06-02",
+    "scalebar_length_m": 0.5,
+    "scalebar_depth_m": {
+      "NW": 5.6,
+      "NE": 5.2,
+      "M": 6.0,
+      "SW": 7.0,
+      "SE": 6.6
+    },
+    "corners": [
+      {
+        "lat": 5.109798729,
+        "lon": 73.076965777,
+        "notes": "SW corner"
+      }
+    ],
+    "raw": {
+      "dir": "maldives_soneva_ootsl1_20250602/raw",
+      "img_count": 1700,
+      "img_size": "4.52 GB"
+    },
+    "site": "OOTS L",
+    "notes": "On slope, SW corner located on tall outcrop near start of vertical wall section",
+    "scalebars": [
+      {
+        "direction": "M",
+        "distance_m": 0.5,
+        "depth_m": 6.0,
+        "markers": [
+          {
+            "projections": [
+              {
+                "image": "raw/02.06.25 RHS/G0010557.JPG",
+                "colmap_image_id": 1343,
+                "pixel_x": 1759.98584,
+                "pixel_y": 2141.1814
+              },
+              {
+                "image": "raw/02.06.25 RHS/G0010622.JPG",
+                "colmap_image_id": 1408,
+                "pixel_x": 670.167603,
+                "pixel_y": 1408.53052
+              }
+            ]
+          },
+          {
+            "projections": [
+              {
+                "image": "raw/02.06.25 LHS/G0011038.JPG",
+                "colmap_image_id": 493,
+                "pixel_x": 2721.59009,
+                "pixel_y": 2159.75806
+              },
+              {
+                "image": "raw/02.06.25 LHS/G0011239.JPG",
+                "colmap_image_id": 694,
+                "pixel_x": 1082.28381,
+                "pixel_y": 53.386673
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "direction": "SE",
+        "distance_m": 0.5,
+        "depth_m": 6.6,
+        "markers": [
+          {
+            "projections": [
+              {
+                "image": "raw/02.06.25 LHS/G0010908.JPG",
+                "colmap_image_id": 363,
+                "pixel_x": 2207.06763,
+                "pixel_y": 355.319794
+              },
+              {
+                "image": "raw/02.06.25 LHS/G0010941.JPG",
+                "colmap_image_id": 396,
+                "pixel_x": 2060.5376,
+                "pixel_y": 832.851196
+              },
+              {
+                "image": "raw/02.06.25 RHS/G0010429.JPG",
+                "colmap_image_id": 1215,
+                "pixel_x": 27.4312477,
+                "pixel_y": 1789.78662
+              },
+              {
+                "image": "raw/02.06.25 RHS/G0010431.JPG",
+                "colmap_image_id": 1217,
+                "pixel_x": 137.328888,
+                "pixel_y": 2925.39551
+              }
+            ]
+          },
+          {
+            "projections": [
+              {
+                "image": "raw/02.06.25 LHS/G0010908.JPG",
+                "colmap_image_id": 363,
+                "pixel_x": 2875.61157,
+                "pixel_y": 1884.72864
+              },
+              {
+                "image": "raw/02.06.25 LHS/G0010941.JPG",
+                "colmap_image_id": 396,
+                "pixel_x": 1666.73767,
+                "pixel_y": 640.530334
+              },
+              {
+                "image": "raw/02.06.25 RHS/G0010428.JPG",
+                "colmap_image_id": 1214,
+                "pixel_x": 1034.82629,
+                "pixel_y": 2586.54443
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "direction": "NE",
+        "distance_m": 0.5,
+        "depth_m": 5.2,
+        "markers": [
+          {
+            "projections": [
+              {
+                "image": "raw/02.06.25 LHS/G0011238.JPG",
+                "colmap_image_id": 693,
+                "pixel_x": 5311.69336,
+                "pixel_y": 3619.58301
+              },
+              {
+                "image": "raw/02.06.25 LHS/G0011240.JPG",
+                "colmap_image_id": 695,
+                "pixel_x": 5128.53076,
+                "pixel_y": 4059.17358
+              }
+            ]
+          },
+          {
+            "projections": [
+              {
+                "image": "raw/02.06.25 LHS/G0011238.JPG",
+                "colmap_image_id": 693,
+                "pixel_x": 3223.63843,
+                "pixel_y": 3299.0481
+              },
+              {
+                "image": "raw/02.06.25 LHS/G0011240.JPG",
+                "colmap_image_id": 695,
+                "pixel_x": 3141.21509,
+                "pixel_y": 3729.48047
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "direction": "NW",
+        "distance_m": 0.5,
+        "depth_m": 5.6,
+        "markers": [
+          {
+            "projections": [
+              {
+                "image": "raw/02.06.25 LHS/G0011167.JPG",
+                "colmap_image_id": 622,
+                "pixel_x": 1256.28833,
+                "pixel_y": 639.507385
+              },
+              {
+                "image": "raw/02.06.25 RHS/G0010788.JPG",
+                "colmap_image_id": 1574,
+                "pixel_x": 2619.18384,
+                "pixel_y": 4683.75781
+              }
+            ]
+          },
+          {
+            "projections": [
+              {
+                "image": "raw/02.06.25 LHS/G0011167.JPG",
+                "colmap_image_id": 622,
+                "pixel_x": 3216.12964,
+                "pixel_y": 1656.06055
+              },
+              {
+                "image": "raw/02.06.25 LHS/G0011169.JPG",
+                "colmap_image_id": 624,
+                "pixel_x": 3580.78809,
+                "pixel_y": 2864.64917
+              },
+              {
+                "image": "raw/02.06.25 LHS/G0011268.JPG",
+                "colmap_image_id": 723,
+                "pixel_x": 3490.87354,
+                "pixel_y": 3002.30664
+              },
+              {
+                "image": "raw/02.06.25 RHS/G0010788.JPG",
+                "colmap_image_id": 1574,
+                "pixel_x": 1062.30066,
+                "pixel_y": 3667.20459
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "direction": "SW",
+        "distance_m": 0.5,
+        "depth_m": 7.0,
+        "markers": [
+          {
+            "projections": [
+              {
+                "image": "raw/02.06.25 LHS/G0010753.JPG",
+                "colmap_image_id": 208,
+                "pixel_x": 1329.55347,
+                "pixel_y": 2059.01855
+              },
+              {
+                "image": "raw/02.06.25 LHS/G0010754.JPG",
+                "colmap_image_id": 209,
+                "pixel_x": 1192.1814,
+                "pixel_y": 3872.32959
+              }
+            ]
+          },
+          {
+            "projections": [
+              {
+                "image": "raw/02.06.25 LHS/G0010833.JPG",
+                "colmap_image_id": 288,
+                "pixel_x": 2840.646,
+                "pixel_y": 2352.07886
+              },
+              {
+                "image": "raw/02.06.25 LHS/G0010834.JPG",
+                "colmap_image_id": 289,
+                "pixel_x": 2877.27856,
+                "pixel_y": 2773.35327
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "maldives_soneva_ootsl1_20250620": {
+    "capture_date": "2025-06-20",
+    "scalebar_length_m": 0.5,
+    "scalebar_depth_m": {
+      "NW": 5.8,
+      "NE": 5.5,
+      "S": 7.4
+    },
+    "corners": [
+      {
+        "lat": 5.109798729,
+        "lon": 73.076965777,
+        "notes": "SW corner"
+      }
+    ],
+    "raw": {
+      "dir": "maldives_soneva_ootsl1_20250620/raw",
+      "img_count": 1213,
+      "img_size": "3.29 GB"
+    },
+    "site": "OOTS L",
+    "notes": "On slope, SW corner located on tall outcrop near start of vertical wall section"
+  },
+  "maldives_soneva_ootsl1_20251007": {
+    "capture_date": "2025-10-07",
+    "scalebar_length_m": 0.5,
+    "scalebar_depth_m": {
+      "NE": 6.0,
+      "SE": 7.4,
+      "NW": 6.1
+    },
+    "corners": [
+      {
+        "lat": 5.109798729,
+        "lon": 73.076965777,
+        "notes": "SW corner"
+      }
+    ],
+    "raw": {
+      "dir": "maldives_soneva_ootsl1_20251007/raw",
+      "img_count": 659,
+      "img_size": "1.89 GB"
+    },
+    "site": "OOTS L",
+    "notes": "On slope, SW corner located on tall outcrop near start of vertical wall section"
+  },
+  "maldives_soneva_ootsl1_20260218": {
+    "capture_date": "2026-02-18",
+    "scalebar_length_m": 0.5,
+    "scalebar_depth_m": {
+      "I": 7.5,
+      "II": 5.0,
+      "III": 7.1
+    },
+    "corners": [
+      {
+        "lat": 5.109798729,
+        "lon": 73.076965777,
+        "notes": "SW corner"
+      }
+    ],
+    "raw": {
+      "dir": "maldives_soneva_ootsl1_20260218/raw",
+      "img_count": 1359,
+      "img_size": "3.89 GB"
+    },
+    "site": "OOTS L",
+    "notes": "On slope, SW corner located on tall outcrop near start of vertical wall section"
+  },
+  "maldives_soneva_ootsr2_20250702": {
+    "capture_date": "2025-07-02",
+    "scalebar_length_m": 0.5,
+    "scalebar_depth_m": {
+      "SW": 3.6,
+      "M": 3.2,
+      "NE": 3.1
+    },
+    "corners": [
+      {
+        "lat": 5.110743804,
+        "lon": 73.074834262,
+        "notes": "SW corner"
+      }
+    ],
+    "raw": {
+      "dir": "maldives_soneva_ootsr2_20250702/raw",
+      "img_count": 1606,
+      "img_size": "4.28 GB"
+    },
+    "site": "OOTS R",
+    "notes": "Flat directly above cave ropes",
+    "scalebars": [
+      {
+        "direction": "M",
+        "distance_m": 0.5,
+        "depth_m": 3.2,
+        "markers": [
+          {
+            "projections": [
+              {
+                "image": "raw/02.07.25 RHS/G0012435.JPG",
+                "colmap_image_id": 1244,
+                "pixel_x": 1188.35767,
+                "pixel_y": 2762.26953
+              }
+            ]
+          },
+          {
+            "projections": [
+              {
+                "image": "raw/02.07.25 RHS/G0012435.JPG",
+                "colmap_image_id": 1244,
+                "pixel_x": 2509.56787,
+                "pixel_y": 1399.93201
+              },
+              {
+                "image": "raw/02.07.25 RHS/G0012439.JPG",
+                "colmap_image_id": 1248,
+                "pixel_x": 2458.15894,
+                "pixel_y": 2381.84302
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "direction": "SW",
+        "distance_m": 0.5,
+        "depth_m": 3.6,
+        "markers": [
+          {
+            "projections": [
+              {
+                "image": "raw/02.07.25 LHS/G0012953.JPG",
+                "colmap_image_id": 361,
+                "pixel_x": 2638.09033,
+                "pixel_y": 1693.46777
+              },
+              {
+                "image": "raw/02.07.25 RHS/G0012408.JPG",
+                "colmap_image_id": 1217,
+                "pixel_x": 4298.59961,
+                "pixel_y": 957.815002
+              },
+              {
+                "image": "raw/02.07.25 RHS/G0012410.JPG",
+                "colmap_image_id": 1219,
+                "pixel_x": 4385.99512,
+                "pixel_y": 1831.76733
+              }
+            ]
+          },
+          {
+            "projections": [
+              {
+                "image": "raw/02.07.25 LHS/G0012953.JPG",
+                "colmap_image_id": 361,
+                "pixel_x": 2638.09033,
+                "pixel_y": 757.824707
+              },
+              {
+                "image": "raw/02.07.25 RHS/G0012408.JPG",
+                "colmap_image_id": 1217,
+                "pixel_x": 5193.11572,
+                "pixel_y": 2659.45142
+              },
+              {
+                "image": "raw/02.07.25 RHS/G0012410.JPG",
+                "colmap_image_id": 1219,
+                "pixel_x": 5275.37012,
+                "pixel_y": 3692.77148
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "maldives_soneva_ootsr2_20250704": {
+    "capture_date": "2025-07-04",
+    "scalebar_length_m": 0.5,
+    "scalebar_depth_m": {
+      "NW": 3.5,
+      "E": 3.4,
+      "SW": 3.8
+    },
+    "corners": [
+      {
+        "lat": 5.110743804,
+        "lon": 73.074834262,
+        "notes": "SW corner"
+      }
+    ],
+    "raw": {
+      "dir": "maldives_soneva_ootsr2_20250704/raw",
+      "img_count": 957,
+      "img_size": "2.55 GB"
+    },
+    "site": "OOTS R",
+    "notes": "Flat directly above cave ropes"
+  },
+  "maldives_soneva_ootsr2_20251008": {
+    "capture_date": "2025-10-08",
+    "scalebar_length_m": 0.5,
+    "scalebar_depth_m": {
+      "I": 4.0,
+      "II": 3.8,
+      "III": 3.8
+    },
+    "corners": [
+      {
+        "lat": 5.110743804,
+        "lon": 73.074834262,
+        "notes": "SW corner"
+      }
+    ],
+    "raw": {
+      "dir": "maldives_soneva_ootsr2_20251008/raw",
+      "img_count": 841,
+      "img_size": "2.41 GB"
+    },
+    "site": "OOTS R",
+    "notes": "Flat directly above cave ropes"
+  },
+  "maldives_soneva_ootsr2_20260303": {
+    "capture_date": "2026-03-03",
+    "scalebar_length_m": 0.5,
+    "scalebar_depth_m": {
+      "I": 3.8,
+      "II": 3.5,
+      "III": 4.0
+    },
+    "corners": [
+      {
+        "lat": 5.110743804,
+        "lon": 73.074834262,
+        "notes": "SW corner"
+      }
+    ],
+    "raw": {
+      "dir": "maldives_soneva_ootsr2_20260303/raw",
+      "img_count": 661,
+      "img_size": "1.89 GB"
+    },
+    "site": "OOTS R",
+    "notes": "Flat directly above cave ropes"
+  },
+  "maldives_soneva_ootsr3_20250703": {
+    "capture_date": "2025-07-03",
+    "scalebar_length_m": 0.5,
+    "scalebar_depth_m": {
+      "N": 10.0,
+      "E": 9.1,
+      "S": 11.4
+    },
+    "corners": [
+      {
+        "lat": 5.110664687,
+        "lon": 73.07502025595,
+        "notes": "SW corner"
+      }
+    ],
+    "raw": {
+      "dir": "maldives_soneva_ootsr3_20250703/raw",
+      "img_count": 916,
+      "img_size": "2.44 GB"
+    },
+    "site": "OOTS R",
+    "notes": "Sloping gulley in curve just before cave section",
+    "scalebars": [
+      {
+        "direction": "N",
+        "distance_m": 0.5,
+        "depth_m": 10.0,
+        "markers": [
+          {
+            "projections": [
+              {
+                "image": "raw/T0 03.07.25 RHS/G0043968.JPG",
+                "colmap_image_id": 716,
+                "pixel_x": 2201.11426,
+                "pixel_y": 2746.84668
+              },
+              {
+                "image": "raw/T0 03.07.25 RHS/G0043971.JPG",
+                "colmap_image_id": 719,
+                "pixel_x": 2298.79126,
+                "pixel_y": 3954.95728
+              },
+              {
+                "image": "raw/T0 03.07.25 RHS/G0044014.JPG",
+                "colmap_image_id": 762,
+                "pixel_x": 4123.80908,
+                "pixel_y": 2494.94287
+              }
+            ]
+          },
+          {
+            "projections": [
+              {
+                "image": "raw/T0 03.07.25 LHS/G0044592.JPG",
+                "colmap_image_id": 298,
+                "pixel_x": 4622.47607,
+                "pixel_y": 804.092773
+              },
+              {
+                "image": "raw/T0 03.07.25 RHS/G0043966.JPG",
+                "colmap_image_id": 714,
+                "pixel_x": 3429.78833,
+                "pixel_y": 2664.59253
+              },
+              {
+                "image": "raw/T0 03.07.25 RHS/G0043968.JPG",
+                "colmap_image_id": 716,
+                "pixel_x": 3661.12866,
+                "pixel_y": 2921.63721
+              },
+              {
+                "image": "raw/T0 03.07.25 RHS/G0043971.JPG",
+                "colmap_image_id": 719,
+                "pixel_x": 3743.38281,
+                "pixel_y": 4006.36621
+              },
+              {
+                "image": "raw/T0 03.07.25 RHS/G0044014.JPG",
+                "colmap_image_id": 762,
+                "pixel_x": 2771.75366,
+                "pixel_y": 2464.09741
+              },
+              {
+                "image": "raw/T0 03.07.25 RHS/G0044161.JPG",
+                "colmap_image_id": 909,
+                "pixel_x": 3733.10107,
+                "pixel_y": 4618.13281
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "direction": "E",
+        "distance_m": 0.5,
+        "depth_m": 9.1,
+        "markers": [
+          {
+            "projections": [
+              {
+                "image": "raw/T0 03.07.25 LHS/G0044492.JPG",
+                "colmap_image_id": 198,
+                "pixel_x": 2149.70532,
+                "pixel_y": 3163.76392
+              },
+              {
+                "image": "raw/T0 03.07.25 LHS/G0044530.JPG",
+                "colmap_image_id": 236,
+                "pixel_x": 2108.57812,
+                "pixel_y": 3307.70898
+              },
+              {
+                "image": "raw/T0 03.07.25 RHS/G0043801.JPG",
+                "colmap_image_id": 549,
+                "pixel_x": 5100.57959,
+                "pixel_y": 1271.40967
+              }
+            ]
+          },
+          {
+            "projections": [
+              {
+                "image": "raw/T0 03.07.25 LHS/G0044492.JPG",
+                "colmap_image_id": 198,
+                "pixel_x": 715.395264,
+                "pixel_y": 3919.47559
+              },
+              {
+                "image": "raw/T0 03.07.25 LHS/G0044520.JPG",
+                "colmap_image_id": 226,
+                "pixel_x": 3337.2522,
+                "pixel_y": 901.769775
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "direction": "S",
+        "distance_m": 0.5,
+        "depth_m": 11.5,
+        "markers": [
+          {
+            "projections": [
+              {
+                "image": "raw/T0 03.07.25 RHS/G0043842.JPG",
+                "colmap_image_id": 590,
+                "pixel_x": 833.635864,
+                "pixel_y": 1615.84961
+              },
+              {
+                "image": "raw/T0 03.07.25 RHS/G0043843.JPG",
+                "colmap_image_id": 591,
+                "pixel_x": 777.085999,
+                "pixel_y": 1903.73987
+              }
+            ]
+          },
+          {
+            "projections": [
+              {
+                "image": "raw/T0 03.07.25 RHS/G0043843.JPG",
+                "colmap_image_id": 591,
+                "pixel_x": 1018.70813,
+                "pixel_y": 628.797668
+              },
+              {
+                "image": "raw/T0 03.07.25 RHS/G0043847.JPG",
+                "colmap_image_id": 595,
+                "pixel_x": 1075.25793,
+                "pixel_y": 2273.88428
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "maldives_soneva_ootsr3_20250704": {
+    "capture_date": "2025-07-04",
+    "scalebar_length_m": 0.5,
+    "scalebar_depth_m": {
+      "N": 10.0,
+      "E": 9.1,
+      "SW": 11.5
+    },
+    "corners": [
+      {
+        "lat": 5.110664687,
+        "lon": 73.07502025595,
+        "notes": "SW corner"
+      }
+    ],
+    "raw": {
+      "dir": "maldives_soneva_ootsr3_20250704/raw",
+      "img_count": 643,
+      "img_size": "1.71 GB"
+    },
+    "site": "OOTS R",
+    "notes": "Sloping gulley in curve just before cave section"
+  },
+  "maldives_soneva_ootsr3_20251008": {
+    "capture_date": "2025-10-08",
+    "scalebar_length_m": 0.5,
+    "scalebar_depth_m": {
+      "I": 10.6,
+      "II": 8.9,
+      "III": 11.4
+    },
+    "corners": [
+      {
+        "lat": 5.110664687,
+        "lon": 73.07502025595,
+        "notes": "SW corner"
+      }
+    ],
+    "raw": {
+      "dir": "maldives_soneva_ootsr3_20251008/raw",
+      "img_count": 476,
+      "img_size": "1.36 GB"
+    },
+    "site": "OOTS R",
+    "notes": "Sloping gulley in curve just before cave section"
+  },
+  "maldives_soneva_ootsr3_20260303": {
+    "capture_date": "2026-03-03",
+    "scalebar_length_m": 0.5,
+    "scalebar_depth_m": {
+      "I": 11.5,
+      "II": 10.3,
+      "III": 8.8
+    },
+    "corners": [
+      {
+        "lat": 5.110664687,
+        "lon": 73.07502025595,
+        "notes": "SW corner"
+      }
+    ],
+    "raw": {
+      "dir": "maldives_soneva_ootsr3_20260303/raw",
+      "img_count": 2012,
+      "img_size": "5.75 GB"
+    },
+    "site": "OOTS R",
+    "notes": "Sloping gulley in curve just before cave section"
+  }
+}

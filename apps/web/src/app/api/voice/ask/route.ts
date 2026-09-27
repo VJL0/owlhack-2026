@@ -14,8 +14,10 @@ export async function POST(req: Request) {
 
   try {
     const out = await runAgent(question, {
-      view: body?.view === "reef" ? "reef" : "map",
+      view: body?.view === "reef" || body?.view === "flagship" || body?.view === "world" ? body.view : "map",
       siteId: str(body?.siteId),
+      flagshipId: str(body?.flagshipId),
+      flagshipDate: str(body?.flagshipDate),
       date: str(body?.date),
       layers: Array.isArray(body?.layers) ? body.layers.filter((l): l is string => typeof l === "string") : undefined,
       lang: body?.lang === "es" ? "es" : "en",

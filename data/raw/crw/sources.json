@@ -1,0 +1,50 @@
+{
+  "weekly-soneva-fushi.csv": {
+    "dataset": "NOAA Coral Reef Watch daily global 5 km v3.1 (DHW, CoralTemp SST, SST anomaly), sampled every 7 days",
+    "url": [
+      "https://coastwatch.noaa.gov/erddap/griddap/noaacrwdhwDaily",
+      "https://coastwatch.noaa.gov/erddap/griddap/noaacrwsstDaily",
+      "https://coastwatch.noaa.gov/erddap/griddap/noaacrwsstanomalyDaily"
+    ],
+    "pixel": {
+      "lat": 5.125,
+      "lon": 73.075
+    },
+    "note": "Soneva Fushi house reef plots",
+    "retrieved": "2026-09-27",
+    "sha256": "506bd1c337d77592bbfc7ed0b56eacd6ebb8a7cba4f3750c10ce6283e633d341",
+    "license": "NOAA Coral Reef Watch: free to use with credit (from 2002 the SST is GHRSST-based)"
+  },
+  "weekly-lizard-island.csv": {
+    "dataset": "NOAA Coral Reef Watch daily global 5 km v3.1 (DHW, CoralTemp SST, SST anomaly), sampled every 7 days",
+    "url": [
+      "https://coastwatch.noaa.gov/erddap/griddap/noaacrwdhwDaily",
+      "https://coastwatch.noaa.gov/erddap/griddap/noaacrwsstDaily",
+      "https://coastwatch.noaa.gov/erddap/griddap/noaacrwsstanomalyDaily"
+    ],
+    "pixel": {
+      "lat": -14.675,
+      "lon": 145.475
+    },
+    "note": "AIMS LTMP reef 'Lizard Isles'",
+    "retrieved": "2026-09-27",
+    "sha256": "d7d99198f3f37846c2a2d35e20ccad1b313a96715bbfb53d2980f0e8c28063fe",
+    "license": "NOAA Coral Reef Watch: free to use with credit (from 2002 the SST is GHRSST-based)"
+  },
+  "weekly-moorea.csv": {
+    "dataset": "NOAA Coral Reef Watch daily global 5 km v3.1 (DHW, CoralTemp SST, SST anomaly), sampled every 7 days",
+    "url": [
+      "https://coastwatch.noaa.gov/erddap/griddap/noaacrwdhwDaily",
+      "https://coastwatch.noaa.gov/erddap/griddap/noaacrwsstDaily",
+      "https://coastwatch.noaa.gov/erddap/griddap/noaacrwsstanomalyDaily"
+    ],
+    "pixel": {
+      "lat": -17.475,
+      "lon": -149.825
+    },
+    "note": "north shore forereef, between MCR LTER 1 and 2",
+    "retrieved": "2026-09-27",
+    "sha256": "ab23e9e7054dc7fa716997e1d8364fd1634bfdbb80e15214b4f4931b2beb7097",
+    "license": "NOAA Coral Reef Watch: free to use with credit (from 2002 the SST is GHRSST-based)"
+  }
+}

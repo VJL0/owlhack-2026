@@ -8,6 +8,7 @@ import { dayToDate } from "@/lib/time";
 import type { Lang } from "@/lib/voiceActions";
 import { monthYear, STRINGS } from "./i18n";
 import { speak } from "./speech";
+import { flagshipById } from "@/lib/flagshipIndex";
 
 const translated = new Map<string, string>();
 
@@ -36,6 +37,7 @@ export default function Narrator() {
   const phase = useStore((s) => s.phase);
   const siteId = useStore((s) => s.siteId);
   const reefReady = useStore((s) => s.reefReady);
+  const flagshipId = useStore((s) => s.flagshipId);
   const crossing = useStore((s) => s.crossing);
   const guide = useStore((s) => s.guide);
   const lang = useStore((s) => s.lang);
@@ -44,7 +46,19 @@ export default function Narrator() {
 
   // Which scene is settled right now, if any.
   const key =
-    phase === "flying" ? "flying" : phase === "region" ? "region" : phase === "reef" && reefReady && crossing === "none" ? `reef:${siteId}` : "";
+    phase === "flying"
+      ? "flying"
+      : phase === "region"
+        ? "region"
+        : phase === "world"
+          ? "world"
+          : phase === "flagship" && crossing === "none"
+            ? `flagship:${flagshipId}`
+            : phase === "splat" && reefReady && crossing === "none"
+              ? `splat:${useStore.getState().splatPlot}`
+              : phase === "reef" && reefReady && crossing === "none"
+                ? `reef:${siteId}`
+                : "";
 
   useEffect(() => {
     if (!key || key === scene.current) return;
@@ -55,6 +69,12 @@ export default function Narrator() {
     const build = async () => {
       if (key === "flying") return s.welcome;
       if (key === "region") return s.region(monthYear(dayToDate(t), lang));
+      if (key === "world") return s.world;
+      if (key.startsWith("splat:")) return s.splatArrive(key.slice(6) === "hb" ? "Host Beach" : "OOTS L");
+      if (key.startsWith("flagship:")) {
+        const f = flagshipById(key.slice(9));
+        return f ? [s.flagshipArrive(f.name, await inLang(f.role, lang)), await inLang(f.blurb, lang)].join(" ") : "";
+      }
       const site = siteById(siteId);
       return [s.reefArrive(site.name, site.region), await inLang(momentText(siteId, t).text, lang), s.reefHint].join(" ");
     };

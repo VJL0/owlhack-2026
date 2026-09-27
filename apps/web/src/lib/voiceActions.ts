@@ -11,4 +11,7 @@ export type UiAction =
   | { type: "go_to_map" }
   | { type: "set_date"; date: string } // YYYY-MM-DD
   | { type: "set_layer"; layer: MapLayer; on: boolean }
-  | { type: "set_playing"; playing: boolean };
+  | { type: "set_playing"; playing: boolean }
+  | { type: "go_to_flagship"; flagshipId: "moorea" | "lizard-island" | "soneva-fushi" | "florida" }
+  | { type: "go_to_world" }
+  | { type: "set_flagship_date"; date: string }; // YYYY-MM-DD, flagship evidence timeline

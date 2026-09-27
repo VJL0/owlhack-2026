@@ -10,3 +10,6 @@ infra/.env
 
 # Downloaded Tiger Cloud credentials (never commit)
 tiger-cloud-*-credentials.*
+
+# Large downloads reproduced by apps/web/scripts (never commit)
+data/cache/
