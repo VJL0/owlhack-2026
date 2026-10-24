@@ -68,7 +68,7 @@ services:
     logging: *logging
 
   caddy:
-    image: caddy:2.11.4-alpine
+    image: caddy:2.11.6-alpine
     read_only: true
     tmpfs:
       - /tmp
